@@ -137,7 +137,7 @@ const ModelSchedulesDialog: React.FC<ModelSchedulesDialogProps> = ({
                           <Chip
                             size="small"
                             label={
-                              schedule.one
+                              schedule.once
                                 ? t("One-time")
                                 : t("Recurring (cron)")
                             }
@@ -183,7 +183,7 @@ const ModelSchedulesDialog: React.FC<ModelSchedulesDialogProps> = ({
                               {schedule.description}
                             </Typography>
                           )}
-                          {!schedule.one && (
+                          {!schedule.once && (
                             <Typography variant="caption">
                               {t("Cron:")} {schedule.cron || "—"}
                             </Typography>

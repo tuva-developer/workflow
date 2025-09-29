@@ -33,7 +33,7 @@ export function useDeleteInstance() {
   const qc = useQueryClient();
   return useMutation({
     mutationKey: ['deleteInstance'],
-    mutationFn: ({ instanceId }: DeleteInstanceInput) => deleteInstance(instanceId),
+    mutationFn: ({ instanceId }: DeleteInstanceInput) => deleteInstance({ instanceId }),
     meta: {
       successMessage: 'Instance has been deleted successfully',
       errorMessage: 'Failed to delete instance',
