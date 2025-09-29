@@ -186,7 +186,7 @@ interface Window {
   ace?: typeof ace;
 }
 
-type CanvasWithAuto extends Canvas {
+type CanvasWithAuto = Canvas & {
   zoom(
     zoom?: "fit-viewport" | number,
     center?: "auto" | { x: number; y: number }
