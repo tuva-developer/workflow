@@ -1,0 +1,444 @@
+{
+  "name": "CustomExtension",
+  "uri": "http://example.com/form",
+  "prefix": "customExtension",
+  "xml": {
+    "tagAlias": "lowerCase"
+  },
+  "types": [
+    {
+      "name": "FormName",
+      "superClass": [
+        "Element"
+      ],
+      "properties": [
+        {
+          "name": "value",
+          "type": "String",
+          "isBody": true
+        }
+      ]
+    },
+    {
+      "name": "FormData",
+      "superClass": [
+        "Element"
+      ],
+      "properties": [
+        {
+          "name": "value",
+          "type": "String",
+          "isBody": true
+        }
+      ]
+    },
+    {
+      "name": "FormType",
+      "superClass": [
+        "Element"
+      ],
+      "properties": [
+        {
+          "name": "value",
+          "type": "String",
+          "isBody": true
+        }
+      ]
+    },
+    {
+      "name": "FormDefinition",
+      "superClass": [
+        "Element"
+      ],
+      "properties": [
+        {
+          "name": "value",
+          "type": "String",
+          "isBody": true
+        }
+      ]
+    },
+    {
+      "name": "Script",
+      "superClass": [
+        "Element"
+      ],
+      "properties": [
+        {
+          "name": "value",
+          "type": "String",
+          "isBody": true
+        }
+      ]
+    },
+    {
+      "name": "ScriptFormat",
+      "superClass": [
+        "Element"
+      ],
+      "properties": [
+        {
+          "name": "value",
+          "type": "String",
+          "isBody": true
+        }
+      ]
+    },
+    {
+      "name": "ConditionType",
+      "superClass": [
+        "Element"
+      ],
+      "properties": [
+        {
+          "name": "value",
+          "type": "String",
+          "isBody": true
+        }
+      ]
+    },
+    {
+      "name": "Expression",
+      "superClass": [
+        "Element"
+      ],
+      "properties": [
+        {
+          "name": "value",
+          "type": "String",
+          "isBody": true
+        }
+      ]
+    },
+    {
+      "name": "SaveTemplate",
+      "superClass": [
+        "Element"
+      ],
+      "properties": [
+        {
+          "name": "value",
+          "type": "String",
+          "isBody": true
+        }
+      ]
+    },
+    {
+      "name": "Properties",
+      "superClass": [
+        "Element"
+      ],
+      "properties": [
+        {
+          "name": "values",
+          "isMany": true,
+          "type": "Property"
+        }
+      ]
+    },
+    {
+      "name": "Property",
+      "properties": [
+        {
+          "name": "name",
+          "isAttr": true,
+          "type": "String"
+        },
+        {
+          "name": "value",
+          "isAttr": true,
+          "type": "String"
+        },
+        {
+          "name": "Extensions",
+          "type": "Extensions"
+        }
+      ]
+    },
+    {
+      "name": "MultiInstanceLoopCharacteristicsExtension",
+      "extends": [
+        "bpmn:MultiInstanceLoopCharacteristics"
+      ],
+      "properties": [
+        {
+          "name": "collection",
+          "isAttr": true,
+          "type": "String"
+        }
+      ]
+    },
+    {
+      "name": "UserAssignment",
+      "superClass": [
+        "Element"
+      ],
+      "properties": [
+        {
+          "name": "values",
+          "isMany": true,
+          "type": "Assignee"
+        }
+      ]
+    },
+    {
+      "name": "Assignee",
+      "properties": [
+        {
+          "name": "name",
+          "isAttr": true,
+          "type": "String"
+        },
+        {
+          "name": "value",
+          "isAttr": true,
+          "type": "String"
+        },
+        {
+          "name": "Extensions",
+          "type": "Extensions"
+        }
+      ]
+    },
+    {
+      "name": "GroupAssignment",
+      "superClass": [
+        "Element"
+      ],
+      "properties": [
+        {
+          "name": "values",
+          "isMany": true,
+          "type": "Group"
+        }
+      ]
+    },
+    {
+      "name": "Group",
+      "properties": [
+        {
+          "name": "name",
+          "isAttr": true,
+          "type": "String"
+        },
+        {
+          "name": "value",
+          "isAttr": true,
+          "type": "String"
+        },
+        {
+          "name": "Extensions",
+          "type": "Extensions"
+        }
+      ]
+    },
+    {
+      "name": "ManualAssignment",
+      "superClass": [
+        "Element"
+      ],
+      "properties": [
+        {
+          "name": "value",
+          "isAttr": true,
+          "type": "String"
+        }
+      ]
+    },
+    {
+      "name": "WebhookRequests",
+      "superClass": [
+        "Element"
+      ],
+      "properties": [
+        {
+          "name": "values",
+          "isMany": true,
+          "type": "WebhookRequest"
+        }
+      ]
+    },
+    {
+      "name": "WebhookRequest",
+      "superClass": [
+        "Element"
+      ],
+      "properties": [
+        {
+          "name": "id",
+          "isAttr": true,
+          "type": "String"
+        },
+        {
+          "name": "url",
+          "isAttr": true,
+          "type": "String"
+        },
+        {
+          "name": "method",
+          "isAttr": true,
+          "type": "String"
+        },
+        {
+          "name": "timeout",
+          "isAttr": true,
+          "type": "String"
+        },
+        {
+          "name": "enabled",
+          "isAttr": true,
+          "type": "Boolean",
+          "default": true
+        },
+        {
+          "name": "headers",
+          "isMany": true,
+          "type": "WebhookHeader"
+        },
+        {
+          "name": "body",
+          "type": "WebhookBody"
+        },
+        {
+          "name": "retry",
+          "type": "WebhookRetry"
+        },
+        {
+          "name": "auth",
+          "type": "WebhookAuth"
+        }
+      ]
+    },
+    {
+      "name": "WebhookHeader",
+      "superClass": [
+        "Element"
+      ],
+      "properties": [
+        {
+          "name": "name",
+          "isAttr": true,
+          "type": "String"
+        },
+        {
+          "name": "value",
+          "isAttr": true,
+          "type": "String"
+        }
+      ]
+    },
+    {
+      "name": "WebhookBody",
+      "superClass": [
+        "Element"
+      ],
+      "properties": [
+        {
+          "name": "value",
+          "type": "String",
+          "isBody": true
+        }
+      ]
+    },
+    {
+      "name": "WebhookRetry",
+      "superClass": [
+        "Element"
+      ],
+      "properties": [
+        {
+          "name": "maxAttempts",
+          "isAttr": true,
+          "type": "Integer",
+          "default": 1
+        },
+        {
+          "name": "backoff",
+          "isAttr": true,
+          "type": "String",
+          "default": "none"
+        },
+        {
+          "name": "interval",
+          "isAttr": true,
+          "type": "String"
+        }
+      ]
+    },
+    {
+      "name": "WebhookAuth",
+      "superClass": [
+        "Element"
+      ],
+      "properties": [
+        {
+          "name": "type",
+          "isAttr": true,
+          "type": "String",
+          "default": "none"
+        },
+        {
+          "name": "basic",
+          "type": "WebhookBasicAuth"
+        },
+        {
+          "name": "bearer",
+          "type": "WebhookBearerAuth"
+        },
+        {
+          "name": "apiKey",
+          "type": "WebhookApiKeyAuth"
+        }
+      ]
+    },
+    {
+      "name": "WebhookBasicAuth",
+      "superClass": [
+        "Element"
+      ],
+      "properties": [
+        {
+          "name": "username",
+          "isAttr": true,
+          "type": "String"
+        },
+        {
+          "name": "password",
+          "isAttr": true,
+          "type": "String"
+        }
+      ]
+    },
+    {
+      "name": "WebhookBearerAuth",
+      "superClass": [
+        "Element"
+      ],
+      "properties": [
+        {
+          "name": "token",
+          "isAttr": true,
+          "type": "String"
+        }
+      ]
+    },
+    {
+      "name": "WebhookApiKeyAuth",
+      "superClass": [
+        "Element"
+      ],
+      "properties": [
+        {
+          "name": "headerName",
+          "isAttr": true,
+          "type": "String"
+        },
+        {
+          "name": "value",
+          "isAttr": true,
+          "type": "String"
+        }
+      ]
+    }
+  ]
+}

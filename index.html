@@ -1,0 +1,38 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <link rel="icon" type="image/svg+xml" href="./public/images/logo.png" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Workflow</title>
+  </head>
+  <body>
+    <div id="root"></div>
+    <script src="/env/config.js"></script>
+    <script type="module" src="/src/main.tsx"></script>
+    <!-- Template Modal -->
+    <!-- Modal -->
+    <div id="templateModal" class="mui-modal" style="display: none">
+      <div class="mui-dialog">
+        <div class="mui-dialog-title">
+          <span class="mui-dialog-title-text">Save template</span>
+          <button id="closeModal" class="mui-close-button">&times;</button>
+        </div>
+
+        <div class="mui-dialog-content">
+          <input
+            id="templateNameInput"
+            type="text"
+            class="mui-input"
+            placeholder="Enter template name..."
+          />
+        </div>
+
+        <div class="mui-dialog-actions">
+          <button id="confirmSave" class="mui-button mui-blue">Create</button>
+          <button id="cancelModal" class="mui-button mui-red">Cancel</button>
+        </div>
+      </div>
+    </div>
+  </body>
+</html>
