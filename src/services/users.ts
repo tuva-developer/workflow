@@ -1,6 +1,9 @@
 import { requestWithRefresh } from '@/api/client';
 import { ChangePassWordInput, CreateUserInput, DeleteUserInput, PagedUsers, UpdateUserInput, UpdateUserRoleInput, UserQuery } from '@/services/types';
 import { asObject, asArray, asNumber, asBoolean } from '@/utils/typeGuards';
+import { getRuntimeConfig } from '@/utils/defines';
+import { delay, paginate } from '@/utils/mock';
+import { mockUsers } from '@/mockData';
 
 export function normalizePaged(data: unknown): PagedUsers {
   const obj = asObject(data) ?? {};
@@ -23,6 +26,14 @@ export function normalizePaged(data: unknown): PagedUsers {
 }
 
 export async function loadUsers(params?: UserQuery): Promise<PagedUsers> {
+  const { MOCK_MODE } = getRuntimeConfig();
+  if (MOCK_MODE) {
+    await delay(200);
+    const page = params?.page ?? 1;
+    const limit = params?.limit ?? mockUsers.length;
+    const paged = paginate<User>({ items: mockUsers, page, limit });
+    return paged;
+  }
   const res = await requestWithRefresh<unknown>({
     method: 'GET',
     url: '/tenants/users',
@@ -33,6 +44,19 @@ export async function loadUsers(params?: UserQuery): Promise<PagedUsers> {
 }
 
 export async function createUser(input: CreateUserInput): Promise<User> {
+  const { MOCK_MODE } = getRuntimeConfig();
+  if (MOCK_MODE) {
+    await delay(200);
+    const newUser: User = {
+      userId: input.username,
+      roles: [],
+      permissions: [],
+      joined_at: new Date().toISOString(),
+      updated_at: new Date().toISOString(),
+      tenantId: '',
+    };
+    return newUser;
+  }
   const params = new URLSearchParams();
   params.append('username', input.username);
   params.append('password', input.password);
@@ -52,6 +76,11 @@ export async function createUser(input: CreateUserInput): Promise<User> {
 }
 
 export async function deleteUser(input: DeleteUserInput): Promise<void> {
+  const { MOCK_MODE } = getRuntimeConfig();
+  if (MOCK_MODE) {
+    await delay(100);
+    return;
+  }
   await requestWithRefresh<void>({
     method: 'DELETE',
     url: `/users/${encodeURIComponent(input.userId)}`,
@@ -60,6 +89,18 @@ export async function deleteUser(input: DeleteUserInput): Promise<void> {
 }
 
 export async function updateUser(input: UpdateUserInput): Promise<User> {
+  const { MOCK_MODE } = getRuntimeConfig();
+  if (MOCK_MODE) {
+    await delay(150);
+    return {
+      userId: input.userId,
+      roles: [],
+      permissions: [],
+      joined_at: new Date().toISOString(),
+      updated_at: new Date().toISOString(),
+      tenantId: '',
+    };
+  }
   const payload: {
     username: string;
     email: string;
@@ -90,6 +131,18 @@ export async function updateUser(input: UpdateUserInput): Promise<User> {
 }
 
 export async function updateUserRole(input: UpdateUserRoleInput): Promise<User> {
+  const { MOCK_MODE } = getRuntimeConfig();
+  if (MOCK_MODE) {
+    await delay(120);
+    return {
+      userId: input.userId,
+      roles: input.roles,
+      permissions: [],
+      joined_at: new Date().toISOString(),
+      updated_at: new Date().toISOString(),
+      tenantId: '',
+    };
+  }
   const res = await requestWithRefresh<User>({
     method: 'PATCH',
     url: `/users/${encodeURIComponent(input.userId)}/set-roles`,
@@ -100,6 +153,11 @@ export async function updateUserRole(input: UpdateUserRoleInput): Promise<User> 
 }
 
 export async function changePassword(input: ChangePassWordInput) {
+  const { MOCK_MODE } = getRuntimeConfig();
+  if (MOCK_MODE) {
+    await delay(100);
+    return;
+  }
   const data = new URLSearchParams();
   data.append('old_password', input.oldPassword);
   data.append('new_password', input.newPassword);

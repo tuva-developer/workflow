@@ -14,6 +14,9 @@ import {
   RunModelWithFileInput,
   RunModelWithMultipartInput,
 } from '@/services/types';
+import { getRuntimeConfig } from '@/utils/defines';
+import { delay, paginate } from '@/utils/mock';
+import { mockModels } from '@/mockData';
 
 export type CreateModelResponse = { id: string };
 
@@ -54,6 +57,13 @@ export function normalizePaged(data: unknown): PagedModels {
 }
 
 export async function loadAllModels(params?: ModelQuery): Promise<PagedModels> {
+  const { MOCK_MODE } = getRuntimeConfig();
+  if (MOCK_MODE) {
+    await delay(250);
+    const page = params?.page ?? 1;
+    const limit = params?.limit ?? mockModels.length;
+    return paginate<Model>({ items: mockModels, page, limit });
+  }
   const res = await requestWithRefresh<unknown>({
     method: 'GET',
     url: '/api/v2/workflow/models',
@@ -64,6 +74,13 @@ export async function loadAllModels(params?: ModelQuery): Promise<PagedModels> {
 }
 
 export async function loadEditableModels(params?: ModelQuery): Promise<PagedModels> {
+  const { MOCK_MODE } = getRuntimeConfig();
+  if (MOCK_MODE) {
+    await delay(250);
+    const page = params?.page ?? 1;
+    const limit = params?.limit ?? mockModels.length;
+    return paginate<Model>({ items: mockModels, page, limit });
+  }
   const res = await requestWithRefresh<unknown>({
     method: 'GET',
     url: '/api/v2/workflow/models/edit',
@@ -74,6 +91,13 @@ export async function loadEditableModels(params?: ModelQuery): Promise<PagedMode
 }
 
 export async function loadExecuteModels(params?: ModelQuery): Promise<PagedModels> {
+  const { MOCK_MODE } = getRuntimeConfig();
+  if (MOCK_MODE) {
+    await delay(250);
+    const page = params?.page ?? 1;
+    const limit = params?.limit ?? mockModels.length;
+    return paginate<Model>({ items: mockModels, page, limit });
+  }
   const res = await requestWithRefresh<unknown>({
     method: 'GET',
     url: '/api/v2/workflow/models/execute',
@@ -84,6 +108,13 @@ export async function loadExecuteModels(params?: ModelQuery): Promise<PagedModel
 }
 
 export async function loadModelData(id: string): Promise<Model> {
+  const { MOCK_MODE } = getRuntimeConfig();
+  if (MOCK_MODE) {
+    await delay(150);
+    const found = mockModels.find(m => m._id === id);
+    if (!found) throw new Error('Model not found');
+    return found;
+  }
   const res = await requestWithRefresh<Model>({
     method: 'GET',
     url: `/api/v2/workflow/model/${encodeURIComponent(id)}`,
@@ -94,6 +125,11 @@ export async function loadModelData(id: string): Promise<Model> {
 }
 
 export async function createModel(input: CreateModelInput): Promise<CreateModelResponse> {
+  const { MOCK_MODE } = getRuntimeConfig();
+  if (MOCK_MODE) {
+    await delay(200);
+    return { id: `mock-${Date.now()}` };
+  }
   const { name, categoryId, typeId, xml } = input;
   const res = await requestWithRefresh<CreateModelResponse>({
     method: 'POST',
@@ -109,6 +145,12 @@ export async function createModel(input: CreateModelInput): Promise<CreateModelR
 }
 
 export async function updateModel(input: UpdateModelInput): Promise<Model> {
+  const { MOCK_MODE } = getRuntimeConfig();
+  if (MOCK_MODE) {
+    await delay(200);
+    const current = mockModels.find(m => m._id === input.id);
+    return { ...(current || {} as Model), ...({ updated_at: new Date().toISOString() } as Partial<Model>) } as Model;
+  }
   const { id, params, xml } = input;
   const res = await requestWithRefresh<Model>({
     method: 'PATCH',
@@ -121,6 +163,11 @@ export async function updateModel(input: UpdateModelInput): Promise<Model> {
 }
 
 export async function deleteModel({ id }: DeleteModelInput): Promise<void> {
+  const { MOCK_MODE } = getRuntimeConfig();
+  if (MOCK_MODE) {
+    await delay(120);
+    return;
+  }
   await requestWithRefresh<void>({
     method: 'DELETE',
     url: `/api/v2/workflow/model/${encodeURIComponent(id)}`,
@@ -129,6 +176,12 @@ export async function deleteModel({ id }: DeleteModelInput): Promise<void> {
 }
 
 export async function setReadOnlyModel({ id, readOnly }: SetReadOnlyInput): Promise<Model> {
+  const { MOCK_MODE } = getRuntimeConfig();
+  if (MOCK_MODE) {
+    await delay(120);
+    const current = mockModels.find(m => m._id === id);
+    return { ...(current || {} as Model), read_only: readOnly } as Model;
+  }
   const res = await requestWithRefresh<Model>({
     method: 'PATCH',
     url:
@@ -141,6 +194,11 @@ export async function setReadOnlyModel({ id, readOnly }: SetReadOnlyInput): Prom
 }
 
 export async function loadModelPermission(modelId: string): Promise<ModelPermission> {
+  const { MOCK_MODE } = getRuntimeConfig();
+  if (MOCK_MODE) {
+    await delay(100);
+    return { read: true, write: true, execute: true } as unknown as ModelPermission;
+  }
   const res = await requestWithRefresh<ModelPermission>({
     method: 'GET',
     url: `/api/v2/workflow/model/${encodeURIComponent(modelId)}/permissions`,
@@ -153,6 +211,11 @@ export async function updateModelPermission(
   modelId: string,
   data: ModelPermission
 ): Promise<ModelPermission> {
+  const { MOCK_MODE } = getRuntimeConfig();
+  if (MOCK_MODE) {
+    await delay(120);
+    return data;
+  }
   const res = await requestWithRefresh<ModelPermission>({
     method: 'PATCH',
     url: `/api/v2/workflow/model/${encodeURIComponent(modelId)}/permissions`,
@@ -163,6 +226,11 @@ export async function updateModelPermission(
 }
 
 export async function runModel(input: RunModelInput): Promise<unknown> {
+  const { MOCK_MODE } = getRuntimeConfig();
+  if (MOCK_MODE) {
+    await delay(300);
+    return { status: 'ok', runId: `mock-run-${Date.now()}` };
+  }
   const { modelId, data } = input;
   const res = await requestWithRefresh<unknown>({
     method: "POST",
@@ -175,6 +243,11 @@ export async function runModel(input: RunModelInput): Promise<unknown> {
 }
 
 export async function runModelWithFile(input: RunModelWithFileInput): Promise<unknown> {
+  const { MOCK_MODE } = getRuntimeConfig();
+  if (MOCK_MODE) {
+    await delay(300);
+    return { status: 'ok', runId: `mock-run-${Date.now()}` };
+  }
   const { modelId, file } = input;
   const res = await requestWithRefresh<unknown>({
     method: "POST",
@@ -190,6 +263,11 @@ export async function runModelWithFile(input: RunModelWithFileInput): Promise<un
 }
 
 export async function runModelWithMultipart(input: RunModelWithMultipartInput): Promise<unknown> {
+  const { MOCK_MODE } = getRuntimeConfig();
+  if (MOCK_MODE) {
+    await delay(300);
+    return { status: 'ok', runId: `mock-run-${Date.now()}` };
+  }
   const { modelId, formData } = input;
   const res = await requestWithRefresh<unknown>({
     method: "POST",
@@ -200,8 +278,12 @@ export async function runModelWithMultipart(input: RunModelWithMultipartInput): 
   return res.data;
 }
 
-
 export async function debugModel(input: DebugModelInput): Promise<unknown> {
+  const { MOCK_MODE } = getRuntimeConfig();
+  if (MOCK_MODE) {
+    await delay(200);
+    return { ok: true };
+  }
   const { modelId, data } = input;
   const res = await requestWithRefresh<unknown>({
     method: "POST",
@@ -216,6 +298,11 @@ export async function debugModel(input: DebugModelInput): Promise<unknown> {
 export async function debugModelWithFile(
   input: DebugModelWithFileInput
 ): Promise<unknown> {
+  const { MOCK_MODE } = getRuntimeConfig();
+  if (MOCK_MODE) {
+    await delay(200);
+    return { ok: true };
+  }
   const { modelId, file } = input;
   const res = await requestWithRefresh<unknown>({
     method: "POST",
@@ -233,6 +320,11 @@ export async function debugModelWithFile(
 export async function debugModelWithMultipart(
   input: DebugModelWithMultipartInput
 ): Promise<unknown> {
+  const { MOCK_MODE } = getRuntimeConfig();
+  if (MOCK_MODE) {
+    await delay(200);
+    return { ok: true };
+  }
   const { modelId, formData } = input;
   const res = await requestWithRefresh<unknown>({
     method: "POST",

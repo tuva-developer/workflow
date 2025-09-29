@@ -1,11 +1,11 @@
 import { requestWithRefresh } from '@/api/client';
-import {
-    InstanceQuery,
-    PagedInstances,
-} from '@/services/types';
+import { PagedInstances, InstanceQuery, DeleteInstanceInput, InvokeItemInput, DebugInvokeInput } from '@/services/types';
 import { asObject, asArray, asNumber, asBoolean } from '@/utils/typeGuards';
+import { getRuntimeConfig } from '@/utils/defines';
+import { delay, paginate } from '@/utils/mock';
+import { mockInstances } from '@/mockData';
 
-export function normalizePagedInstances(data: unknown): PagedInstances {
+export function normalizePaged(data: unknown): PagedInstances {
   const obj = asObject(data) ?? {};
 
   const instancesArr = asArray(obj['instances']);
@@ -16,7 +16,7 @@ export function normalizePagedInstances(data: unknown): PagedInstances {
 
   return {
     items,
-    total: asNumber(obj['total'], 0),
+    total: asNumber(obj['total'], len),
     page: asNumber(obj['page'], 1),
     limit: asNumber(obj['limit'], len),
     totalPages: asNumber(obj['totalPages'], 1),
@@ -26,56 +26,79 @@ export function normalizePagedInstances(data: unknown): PagedInstances {
 }
 
 export async function loadInstances(params?: InstanceQuery): Promise<PagedInstances> {
-    const { modelId, ...rest } = params || {};
-
-    const url = modelId
-        ? `/api/v2/workflow/instance/model/${encodeURIComponent(modelId)}`
-        : '/api/v2/workflow/instances';
-
-    const res = await requestWithRefresh<unknown>({
-        method: 'GET',
-        url: url,
-        params: { ...(rest || {}) },
-        headers: { 'Content-Type': 'application/json' },
-    });
-    return normalizePagedInstances(res.data);
+  const { MOCK_MODE } = getRuntimeConfig();
+  if (MOCK_MODE) {
+    await delay(200);
+    const page = params?.page ?? 1;
+    const limit = params?.limit ?? mockInstances.length;
+    return paginate<Instance>({ items: mockInstances, page, limit });
+  }
+  const res = await requestWithRefresh<unknown>({
+    method: 'GET',
+    url: '/api/v2/workflow/instances',
+    params: { ...(params || {}) },
+    headers: { 'Content-Type': 'application/json' },
+  });
+  return normalizePaged(res.data);
 }
 
-export async function loadInstanceData(id: string): Promise<Instance> {
-    const res = await requestWithRefresh<Instance>({
-        method: 'GET',
-        url: `/api/v2/workflow/instance/${encodeURIComponent(id)}`,
-        headers: { 'Content-Type': 'application/json' },
-    });
-    return res.data;
+export async function loadInstance(instanceId: string): Promise<Instance> {
+  const { MOCK_MODE } = getRuntimeConfig();
+  if (MOCK_MODE) {
+    await delay(150);
+    const found = mockInstances.find(i => i._id === instanceId) || mockInstances[0];
+    if (!found) throw new Error('Instance not found');
+    return found;
+  }
+  const res = await requestWithRefresh<Instance>({
+    method: 'GET',
+    url: `/api/v2/workflow/instances/${encodeURIComponent(instanceId)}`,
+    headers: { 'Content-Type': 'application/json' },
+  });
+  return res.data;
 }
 
-export async function loadInstanceDataPublic(instanceId: string): Promise<Instance> {
-    const res = await requestWithRefresh<Instance>({
-        method: 'GET',
-        url: `/api/v2/workflow/public/instance/${encodeURIComponent(instanceId)}`,
-        headers: { 'Content-Type': 'application/json' },
-    });
-    return res.data;
+export async function deleteInstance(input: DeleteInstanceInput): Promise<void> {
+  const { MOCK_MODE } = getRuntimeConfig();
+  if (MOCK_MODE) {
+    await delay(100);
+    return;
+  }
+  await requestWithRefresh<void>({
+    method: 'DELETE',
+    url: `/api/v2/workflow/instances/${encodeURIComponent(input.instanceId)}`,
+    headers: { 'Content-Type': 'application/json' },
+  });
 }
 
-export async function deleteInstance(instanceId: string): Promise<void> {
-    await requestWithRefresh<void>({
-        method: 'DELETE',
-        url: `/api/v2/workflow/instance/${encodeURIComponent(instanceId)}`,
-        withCredentials: true,
-        headers: { 'Content-Type': 'application/json' },
-    });
+export async function invokeItem(input: InvokeItemInput): Promise<Instance> {
+  const { MOCK_MODE } = getRuntimeConfig();
+  if (MOCK_MODE) {
+    await delay(200);
+    const base = mockInstances.find(i => i._id === input.instanceId) || mockInstances[0];
+    return { ...(base as Instance), updated_at: new Date().toISOString() };
+  }
+  const res = await requestWithRefresh<Instance>({
+    method: 'POST',
+    url: `/api/v2/workflow/instances/${encodeURIComponent(input.instanceId)}/await`,
+    data: input.items,
+    headers: { 'Content-Type': 'application/json' },
+  });
+  return res.data;
 }
 
-export async function invokeItem(instanceId: string, items: unknown): Promise<unknown> {
-    const res = await requestWithRefresh<unknown>({
-        method: 'POST',
-        url: `/api/v2/workflow/instance/${encodeURIComponent(instanceId)}/invoke/await`,
-        data: items,
-        withCredentials: true,
-        headers: { 'Content-Type': 'application/json' },
-    });
-
-    return res.data;
+export async function debugInvoke(input: DebugInvokeInput): Promise<Instance> {
+  const { MOCK_MODE } = getRuntimeConfig();
+  if (MOCK_MODE) {
+    await delay(200);
+    const base = mockInstances.find(i => i._id === input.instanceId) || mockInstances[0];
+    return { ...(base as Instance), updated_at: new Date().toISOString() };
+  }
+  const res = await requestWithRefresh<Instance>({
+    method: 'POST',
+    url: `/api/v2/workflow/instances/${encodeURIComponent(input.instanceId)}/debug`,
+    data: input.items,
+    headers: { 'Content-Type': 'application/json' },
+  });
+  return res.data;
 }

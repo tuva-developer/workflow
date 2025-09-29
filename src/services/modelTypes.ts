@@ -1,6 +1,9 @@
 import { requestWithRefresh } from '@/api/client';
 import { AddModelTypeInput, DeleteModelTypeInput, ModelTypeQuery, PagedModelTypes, UpdateModelTypeInput } from '@/services/types';
 import { asObject, asArray, asNumber, asBoolean } from '@/utils/typeGuards';
+import { getRuntimeConfig } from '@/utils/defines';
+import { delay, paginate } from '@/utils/mock';
+import { mockModelTypes } from '@/mockData';
 
 export function normalizePaged(data: unknown): PagedModelTypes {
     const obj = asObject(data) ?? {};
@@ -24,6 +27,13 @@ export function normalizePaged(data: unknown): PagedModelTypes {
 
 
 export async function loadModelTypes(params?: ModelTypeQuery): Promise<PagedModelTypes> {
+    const { MOCK_MODE } = getRuntimeConfig();
+    if (MOCK_MODE) {
+        await delay(200);
+        const page = params?.page ?? 1;
+        const limit = params?.limit ?? mockModelTypes.length;
+        return paginate<ModelType>({ items: mockModelTypes, page, limit });
+    }
     const res = await requestWithRefresh<unknown>({
         method: 'GET',
         url: '/api/v2/workflow/models/types',
@@ -34,6 +44,17 @@ export async function loadModelTypes(params?: ModelTypeQuery): Promise<PagedMode
 }
 
 export async function addModelType(input: AddModelTypeInput): Promise<ModelType> {
+    const { MOCK_MODE } = getRuntimeConfig();
+    if (MOCK_MODE) {
+        await delay(150);
+        return {
+            _id: `mock-type-${Date.now()}`,
+            name: input.name,
+            description: input.description,
+            created_at: new Date().toISOString(),
+            updated_at: new Date().toISOString(),
+        } as ModelType;
+    }
     const res = await requestWithRefresh<ModelType>({
         method: 'POST',
         url:
@@ -47,6 +68,17 @@ export async function addModelType(input: AddModelTypeInput): Promise<ModelType>
 }
 
 export async function updateModelType(input: UpdateModelTypeInput): Promise<ModelType> {
+    const { MOCK_MODE } = getRuntimeConfig();
+    if (MOCK_MODE) {
+        await delay(150);
+        return {
+            _id: input.modelTypeId,
+            name: input.name,
+            description: input.description,
+            created_at: new Date().toISOString(),
+            updated_at: new Date().toISOString(),
+        } as ModelType;
+    }
     const res = await requestWithRefresh<ModelType>({
         method: 'PATCH',
         url:
@@ -60,6 +92,11 @@ export async function updateModelType(input: UpdateModelTypeInput): Promise<Mode
 }
 
 export async function deleteModelType(input: DeleteModelTypeInput): Promise<void> {
+    const { MOCK_MODE } = getRuntimeConfig();
+    if (MOCK_MODE) {
+        await delay(100);
+        return;
+    }
     await requestWithRefresh<void>({
         method: 'DELETE',
         url: `/api/v2/workflow/models/types/${encodeURIComponent(input.modelTypeId)}`,

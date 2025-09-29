@@ -1,6 +1,9 @@
 import { requestWithRefresh } from '@/api/client';
 import { AddGroupInput, DeleteGroupInput, GroupQuery, PagedGroups, UpdateGroupInput } from '@/services/types';
 import { asObject, asArray, asNumber, asBoolean } from '@/utils/typeGuards';
+import { getRuntimeConfig } from '@/utils/defines';
+import { delay, paginate } from '@/utils/mock';
+import { mockGroups } from '@/mockData';
 
 export function normalizePaged(data: unknown): PagedGroups {
   const obj = asObject(data) ?? {};
@@ -23,6 +26,13 @@ export function normalizePaged(data: unknown): PagedGroups {
 }
 
 export async function loadGroups(params?: GroupQuery): Promise<PagedGroups> {
+  const { MOCK_MODE } = getRuntimeConfig();
+  if (MOCK_MODE) {
+    await delay(200);
+    const page = params?.page ?? 1;
+    const limit = params?.limit ?? mockGroups.length;
+    return paginate<Group>({ items: mockGroups, page, limit });
+  }
   const res = await requestWithRefresh<unknown>({
     method: 'GET',
     url: '/api/v2/workflow/groups',
@@ -33,6 +43,18 @@ export async function loadGroups(params?: GroupQuery): Promise<PagedGroups> {
 }
 
 export async function addGroup(input: AddGroupInput): Promise<Group> {
+  const { MOCK_MODE } = getRuntimeConfig();
+  if (MOCK_MODE) {
+    await delay(150);
+    return {
+      _id: `mock-grp-${Date.now()}`,
+      name: input.name,
+      description: input.description,
+      members: [],
+      created_at: new Date().toISOString(),
+      updated_at: new Date().toISOString(),
+    } as Group;
+  }
   const res = await requestWithRefresh<Group>({
     method: 'POST',
     url:
@@ -46,6 +68,18 @@ export async function addGroup(input: AddGroupInput): Promise<Group> {
 }
 
 export async function updateGroup(input: UpdateGroupInput): Promise<Group> {
+  const { MOCK_MODE } = getRuntimeConfig();
+  if (MOCK_MODE) {
+    await delay(150);
+    return {
+      _id: input.id,
+      name: input.name,
+      description: input.description,
+      members: input.members || [],
+      created_at: new Date().toISOString(),
+      updated_at: new Date().toISOString(),
+    } as Group;
+  }
   const res = await requestWithRefresh<Group>({
     method: 'PATCH',
     url:
@@ -59,6 +93,11 @@ export async function updateGroup(input: UpdateGroupInput): Promise<Group> {
 }
 
 export async function deleteGroup(input: DeleteGroupInput): Promise<void> {
+  const { MOCK_MODE } = getRuntimeConfig();
+  if (MOCK_MODE) {
+    await delay(100);
+    return;
+  }
   await requestWithRefresh<void>({
     method: 'DELETE',
     url: `/api/v2/workflow/groups/${encodeURIComponent(input.groupId)}`,

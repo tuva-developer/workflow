@@ -3,6 +3,7 @@ type Permission = unknown;
 type RuntimeConfig = {
   API_BASE_URL: string;
   SECURE_FLAG: boolean;
+  MOCK_MODE: boolean;
 };
 
 type MultipartEntry = {
@@ -180,14 +181,15 @@ interface Window {
   VBD_WORKFLOW_CONFIG?: {
     API_BASE_URL?: string;
     SECURE_FLAG?: boolean;
+    MOCK_MODE?: boolean;
   };
   ace?: typeof ace;
 }
 
-type CanvasWithAuto = Canvas & {
+type CanvasWithAuto extends Canvas {
   zoom(
     zoom?: "fit-viewport" | number,
     center?: "auto" | { x: number; y: number }
   ): number | void;
   getRootElement(): BpmnElement | null;
-};
+}
