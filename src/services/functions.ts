@@ -1,4 +1,3 @@
-import { requestWithRefresh } from "@/api/client";
 import {
   asObject,
   asArray,
@@ -7,6 +6,7 @@ import {
   asString,
 } from "@/utils/typeGuards";
 import { PagedRemoteFunctions, RemoteFunction } from "@/services/types";
+import { mockBackend } from "./mockBackend";
 
 export function normalizePagedFunctions(data: unknown): PagedRemoteFunctions {
   const obj = asObject(data) ?? {};
@@ -40,13 +40,7 @@ export function normalizePagedFunctions(data: unknown): PagedRemoteFunctions {
 }
 
 export async function loadFunctions(): Promise<PagedRemoteFunctions> {
-  const res = await requestWithRefresh<unknown>({
-    method: "GET",
-    url: "/api/v2/workflow/modules/js",
-    headers: { "Content-Type": "application/json" },
-  });
-
-  return normalizePagedFunctions(res.data);
+  return mockBackend.getFunctions();
 }
 
 export interface AddFunctionInput {
@@ -59,26 +53,9 @@ export interface AddFunctionInput {
 export async function addFunction(
   input: AddFunctionInput
 ): Promise<RemoteFunction> {
-  const res = await requestWithRefresh<RemoteFunction>({
-    method: "POST",
-    url:
-      `/api/v2/workflow/modules/js` +
-      `?name=${encodeURIComponent(input.name)}` +
-      `&description=${encodeURIComponent(input.description)}` +
-      `&public=${String(input.public ?? false)}`,
-    data: input.script,
-    headers: {
-      "Content-Type": "application/javascript",
-    },
-  });
-
-  return res.data;
+  return mockBackend.addFunction(input);
 }
 
 export async function deleteFunction(id: string): Promise<void> {
-  await requestWithRefresh<void>({
-    method: "DELETE",
-    url: `/api/v2/workflow/modules/js/${encodeURIComponent(id)}`,
-    headers: { "Content-Type": "application/json" },
-  });
+  await mockBackend.deleteFunction(id);
 }

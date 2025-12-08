@@ -1,4 +1,3 @@
-import { requestWithRefresh } from "@/api/client";
 import {
     TemplateQuery,
     PagedTemplates,
@@ -6,6 +5,7 @@ import {
     DeleteTemplateInput,
 } from "@/services/types";
 import { asObject, asArray, asNumber, asBoolean } from '@/utils/typeGuards';
+import { mockBackend } from "./mockBackend";
 
 export function normalizePaged(data: unknown): PagedTemplates {
     const obj = asObject(data) ?? {};
@@ -28,32 +28,13 @@ export function normalizePaged(data: unknown): PagedTemplates {
 }
 
 export async function loadTemplates(params?: TemplateQuery): Promise<PagedTemplates> {
-    const res = await requestWithRefresh<unknown>({
-        method: "GET",
-        url: "/api/v2/workflow/templates",
-        params: { ...(params || {}) },
-        withCredentials: true,
-        headers: { "Content-Type": "application/json" },
-    });
-    return normalizePaged(res.data);
+    return mockBackend.getTemplates(params);
 }
 
 export async function createTemplate(input: AddTemplateInput): Promise<Template> {
-    const res = await requestWithRefresh<Template>({
-        method: "POST",
-        url: `/api/v2/workflow/template?name=${encodeURIComponent(input.name)}&description=${encodeURIComponent(input.description || '')}`,
-        data: input.config,
-        withCredentials: true,
-        headers: { "Content-Type": "application/xml" },
-    });
-    return res.data;
+    return mockBackend.addTemplate(input);
 }
 
 export async function deleteTemplate(input: DeleteTemplateInput): Promise<void> {
-    await requestWithRefresh<void>({
-        method: "DELETE",
-        url: `/api/v2/workflow/template/${encodeURIComponent(input.templateId)}`,
-        withCredentials: true,
-        headers: { "Content-Type": "application/json" },
-    });
+    await mockBackend.deleteTemplate(input);
 }

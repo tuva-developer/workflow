@@ -1,4 +1,3 @@
-import { requestWithRefresh } from '@/api/client';
 import {
   PagedSchedules,
   ScheduleQuery,
@@ -7,6 +6,7 @@ import {
   DeleteScheduleInput,
 } from '@/services/types';
 import { asObject, asArray, asNumber, asBoolean } from '@/utils/typeGuards';
+import { mockBackend } from './mockBackend';
 
 export function normalizePaged(data: unknown): PagedSchedules {
   const obj = asObject(data) ?? {};
@@ -27,86 +27,22 @@ export function normalizePaged(data: unknown): PagedSchedules {
     hasPrev: asBoolean(obj['hasPrev'], false),
   };
 }
-const toBoolString = (v: boolean | undefined) =>
-  typeof v === 'boolean' ? String(v) : undefined;
-
-const omitUndefined = <T extends Record<string, unknown>>(obj: T): Partial<T> => {
-  const out: Record<string, unknown> = {};
-  for (const k in obj) {
-    if (obj[k] !== undefined) out[k] = obj[k];
-  }
-  return out as Partial<T>;
-};
-
 export async function loadSchedules(params?: ScheduleQuery): Promise<PagedSchedules> {
-  const res = await requestWithRefresh<unknown>({
-    method: 'GET',
-    url: '/api/v2/workflow/schedules',
-    params: { ...(params || {}) },
-    headers: { 'Content-Type': 'application/json' },
-    withCredentials: true,
-  });
-  return normalizePaged(res.data);
+  return mockBackend.getSchedules(params);
 }
 
 export async function createSchedule(input: AddScheduleInput): Promise<Schedule> {
-  const params = omitUndefined({
-    modelId: input.modelId,
-    name: input.name,
-    type: input.type,
-    description: input.description,
-    cron: input.cron,
-    once: toBoolString(input.once),
-    active: toBoolString(input.active),
-  });
-
-  const body = input.data ? { data: input.data } : {};
-
-  const res = await requestWithRefresh<Schedule>({
-    method: 'POST',
-    url: '/api/v2/workflow/schedules',
-    params,
-    data: body,
-    headers: { 'Content-Type': 'application/json' },
-    withCredentials: true,
-  });
-  return res.data;
+  return mockBackend.addSchedule(input);
 }
 
 export async function deleteAllSchedules(): Promise<void> {
-  await requestWithRefresh<void>({
-    method: 'DELETE',
-    url: '/api/v2/workflow/schedules',
-    headers: { 'Content-Type': 'application/json' },
-    withCredentials: true,
-  });
+  await mockBackend.deleteAllSchedules();
 }
 
 export async function deleteSchedule(input: DeleteScheduleInput): Promise<void> {
-  await requestWithRefresh<void>({
-    method: 'DELETE',
-    url: `/api/v2/workflow/schedules/${encodeURIComponent(input.scheduleId)}`,
-    headers: { 'Content-Type': 'application/json' },
-    withCredentials: true,
-  });
+  await mockBackend.deleteSchedule(input);
 }
 
 export async function updateSchedule(input: UpdateScheduleInput): Promise<Schedule> {
-  const params = omitUndefined({
-    name: input.name,
-    type: input.type,
-    description: input.description,
-    cron: input.cron,
-    once: toBoolString(input.once),
-    active: toBoolString(input.active),
-  });
-
-  const res = await requestWithRefresh<Schedule>({
-    method: 'PATCH',
-    url: `/api/v2/workflow/schedules/${encodeURIComponent(input.scheduleId)}`,
-    params,
-    headers: { 'Content-Type': 'application/json' },
-    withCredentials: true,
-  });
-  return res.data;
+  return mockBackend.updateSchedule(input);
 }

@@ -1,6 +1,6 @@
-import { requestWithRefresh } from '@/api/client';
 import { ChangePassWordInput, CreateUserInput, DeleteUserInput, PagedUsers, UpdateUserInput, UpdateUserRoleInput, UserQuery } from '@/services/types';
 import { asObject, asArray, asNumber, asBoolean } from '@/utils/typeGuards';
+import { mockBackend } from './mockBackend';
 
 export function normalizePaged(data: unknown): PagedUsers {
   const obj = asObject(data) ?? {};
@@ -23,40 +23,15 @@ export function normalizePaged(data: unknown): PagedUsers {
 }
 
 export async function loadUsers(params?: UserQuery): Promise<PagedUsers> {
-  const res = await requestWithRefresh<unknown>({
-    method: 'GET',
-    url: '/tenants/users',
-    params: { ...(params || {}) },
-    headers: { 'Content-Type': 'application/json' },
-  });
-  return normalizePaged(res.data);
+  return mockBackend.getUsers(params);
 }
 
 export async function createUser(input: CreateUserInput): Promise<User> {
-  const params = new URLSearchParams();
-  params.append('username', input.username);
-  params.append('password', input.password);
-  params.append('fullname', input.fullname);
-  params.append('email', input.email);
-  params.append('phone', input.phone);
-  params.append('address', input.address);
-
-  const res = await requestWithRefresh<User>({
-    method: 'POST',
-    url: '/users',
-    data: params,
-    headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
-  });
-
-  return res.data;
+  return mockBackend.createUser(input);
 }
 
 export async function deleteUser(input: DeleteUserInput): Promise<void> {
-  await requestWithRefresh<void>({
-    method: 'DELETE',
-    url: `/users/${encodeURIComponent(input.userId)}?tenantId=${encodeURIComponent(input.tenantId)}`,
-    headers: { 'Content-Type': 'application/json' },
-  });
+  await mockBackend.deleteUser(input);
 }
 
 export async function updateUser(input: UpdateUserInput): Promise<User> {
@@ -79,24 +54,11 @@ export async function updateUser(input: UpdateUserInput): Promise<User> {
     payload.new_password = input.new_password;
   }
 
-  const res = await requestWithRefresh<User>({
-    method: "PATCH",
-    url: `/users/${encodeURIComponent(input.userId)}/info?tenantId=${encodeURIComponent(input.tenantId ?? "")}`,
-    data: payload,
-    headers: { "Content-Type": "application/x-www-form-urlencoded" },
-  });
-
-  return res.data;
+  return mockBackend.updateUser(input);
 }
 
 export async function updateUserRole(input: UpdateUserRoleInput): Promise<User> {
-  const res = await requestWithRefresh<User>({
-    method: 'PATCH',
-    url: `/users/${encodeURIComponent(input.userId)}/set-roles?tenantId=${encodeURIComponent(input.tenantId)}`,
-    data: input.roles,
-    headers: { 'Content-Type': 'application/json' },
-  });
-  return res.data;
+  return mockBackend.updateUserRole(input);
 }
 
 export async function updateMyProfile(input: UpdateUserInput): Promise<User> {
@@ -112,24 +74,9 @@ export async function updateMyProfile(input: UpdateUserInput): Promise<User> {
     fullname: input.fullname,
   };
 
-  const res = await requestWithRefresh<User>({
-    method: 'PATCH',
-    url: `/me/info`,
-    data: payload,
-    headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
-  });
-  return res.data;
+  return mockBackend.updateMyProfile(input);
 }
 
 export async function changePassword(input: ChangePassWordInput) {
-  const data = new URLSearchParams();
-  data.append('old_password', input.oldPassword);
-  data.append('new_password', input.newPassword);
-
-  await requestWithRefresh<void>({
-    method: 'PATCH',
-    url: `/me/update-password`,
-    data,
-    headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
-  });
+  await mockBackend.changePassword(input);
 }

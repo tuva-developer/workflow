@@ -1,104 +1,36 @@
-import axios from 'axios';
 import { tokenStorage } from '@/auth/token-storage';
-import { requestWithRefresh } from '@/api/client';
-import { getRuntimeConfig } from '@/utils/defines';
+import { mockAuth } from '@/services/mockBackend';
 
 export type LoginInput = { username: string; password: string };
 export type LoginResponse = { access_token?: string; refresh_token?: string };
 export type RefreshResponse = { access_token?: string; refresh_token?: string };
 
 export async function login(input: LoginInput): Promise<LoginResponse> {
-  const { API_BASE_URL, SECURE_FLAG } = getRuntimeConfig();
-  const form = new URLSearchParams();
-  form.append('username', input.username);
-  form.append('password', input.password);
-
-  if (SECURE_FLAG) {
-    await axios.post(`${API_BASE_URL}/oauth/login`, form, {
-      withCredentials: true,
-      headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
-    });
-    return {};
-  } else {
-    const { data } = await axios.post<LoginResponse>(
-      `${API_BASE_URL}/oauth/login`,
-      form,
-      { headers: { 'Content-Type': 'application/x-www-form-urlencoded' } }
-    );
-
-    if (data?.access_token) tokenStorage.setAccess(data.access_token);
-    if (data?.refresh_token) tokenStorage.setRefresh(data.refresh_token);
-
-    return data;
-  }
+  const data = await mockAuth.login(input);
+  if (data?.access_token) tokenStorage.setAccess(data.access_token);
+  if (data?.refresh_token) tokenStorage.setRefresh(data.refresh_token);
+  return data;
 }
 
 export async function refresh(): Promise<string | null> {
-  const { API_BASE_URL, SECURE_FLAG } = getRuntimeConfig();
-
-  if (SECURE_FLAG) {
-    try {
-      await axios.post(`${API_BASE_URL}/oauth/refresh`, null, {
-        withCredentials: true,
-      });
-      return null;
-    } catch {
-      tokenStorage.clear();
-      return null;
-    }
-  } else {
-    try {
-      const refreshToken = tokenStorage.getRefresh();
-      if (!refreshToken) {
-        tokenStorage.clear();
-        return null;
-      }
-
-      const { data } = await axios.post<RefreshResponse>(
-        `${API_BASE_URL}/oauth/refresh`,
-        null,
-        {
-          headers: {
-            'refresh_token': refreshToken,
-            'Content-Type': 'application/json'
-          }
-        }
-      );
-
-      if (data?.access_token) tokenStorage.setAccess(data.access_token);
-      if (data?.refresh_token) tokenStorage.setRefresh(data.refresh_token);
-
-      return data?.access_token ?? null;
-    } catch {
-      tokenStorage.clear();
-      return null;
-    }
+  try {
+    const newAccess = await mockAuth.refresh();
+    if (newAccess) tokenStorage.setAccess(newAccess);
+    return newAccess ?? null;
+  } catch {
+    tokenStorage.clear();
+    return null;
   }
 }
 
 export async function logout() {
-  const { API_BASE_URL, SECURE_FLAG } = getRuntimeConfig();
-
-  if (SECURE_FLAG) {
-    try {
-      await axios.post(`${API_BASE_URL}/oauth/logout`, null, {
-        withCredentials: true,
-      });
-    } catch (err) {
-      console.error('Error:', err);
-    }
-  }
-
   tokenStorage.clear();
 }
 
 export async function getCurrentUser(): Promise<{ success: boolean; data?: User }> {
   try {
-    const res = await requestWithRefresh<User>({
-      method: 'GET',
-      url: '/me/info',
-    });
-    return { success: true, data: res.data };
+    const user = await mockAuth.currentUser();
+    return { success: true, data: user };
   } catch {
     return { success: false };
   }
@@ -117,13 +49,8 @@ export async function ensureAuthenticatedUser(): Promise<{
 
 export async function validateToken(): Promise<{ success: boolean; data?: unknown }> {
   try {
-    const res = await requestWithRefresh<unknown>({
-      method: 'POST',
-      url: '/oauth/validate',
-      data: null,
-      headers: { 'Content-Type': 'application/json' },
-    });
-    return { success: true, data: res.data };
+    const res = await mockAuth.validateToken();
+    return { success: true, data: res };
   } catch {
     return { success: false };
   }

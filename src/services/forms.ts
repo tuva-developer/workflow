@@ -1,6 +1,6 @@
-import { requestWithRefresh } from '@/api/client';
 import { PagedForms, AddFormInput, UpdateFormInput, DeleteFormInput, FormQuery } from '@/services/types';
 import { asObject, asArray, asNumber, asBoolean } from '@/utils/typeGuards';
+import { mockBackend } from './mockBackend';
 
 export type CreateFormResponse = { id: string };
 
@@ -25,48 +25,21 @@ export function normalizePagedForms(data: unknown): PagedForms {
 }
 
 export async function loadForms(params?: FormQuery): Promise<PagedForms> {
-    const res = await requestWithRefresh<unknown>({
-        method: 'GET',
-        url: '/api/v2/workflow/forms',
-        params: { ...(params || {}) },
-        headers: { 'Content-Type': 'application/json' },
-    });
-    return normalizePagedForms(res.data);
+    return mockBackend.getForms(params);
 }
 
 export async function loadFormByName(formName: string): Promise<FormConfig> {
-    const res = await requestWithRefresh<FormConfig>({
-        method: 'GET',
-        url: `/api/v2/workflow/form/byname/${encodeURIComponent(formName)}`,
-        headers: { 'Content-Type': 'application/json' },
-    });
-    return res.data;
+    return mockBackend.getFormByName(formName);
 }
 
 export async function createForm(input: AddFormInput): Promise<CreateFormResponse> {
-    const res = await requestWithRefresh<CreateFormResponse>({
-        method: 'POST',
-        url: `/api/v2/workflow/form?name=${encodeURIComponent(input.name)}`,
-        data: input.formSchema,
-        headers: { 'Content-Type': 'application/json' },    
-    });
-    return res.data;
+    return mockBackend.addForm(input);
 }
 
 export async function updateForm(input: UpdateFormInput): Promise<FormConfig> {
-    const res = await requestWithRefresh<FormConfig>({
-        method: 'PATCH',
-        url: `/api/v2/workflow/form/${encodeURIComponent(input.id)}`,
-        data: input.formSchema,
-        headers: { 'Content-Type': 'application/json' },
-    });
-    return res.data;
+    return mockBackend.updateForm(input);
 }
 
 export async function deleteForm(input: DeleteFormInput): Promise<void> {
-    await requestWithRefresh<void>({
-        method: 'DELETE',
-        url: `/api/v2/workflow/form/${encodeURIComponent(input.formName || input.formId || "")}`,
-        headers: { 'Content-Type': 'application/json' },
-    });
+    await mockBackend.deleteForm(input.formName || input.formId || "");
 }

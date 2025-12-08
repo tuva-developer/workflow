@@ -1,9 +1,9 @@
-import { requestWithRefresh } from '@/api/client';
 import {
     InstanceQuery,
     PagedInstances,
 } from '@/services/types';
 import { asObject, asArray, asNumber, asBoolean } from '@/utils/typeGuards';
+import { mockBackend } from './mockBackend';
 
 export function normalizePagedInstances(data: unknown): PagedInstances {
   const obj = asObject(data) ?? {};
@@ -26,56 +26,21 @@ export function normalizePagedInstances(data: unknown): PagedInstances {
 }
 
 export async function loadInstances(params?: InstanceQuery): Promise<PagedInstances> {
-    const { modelId, ...rest } = params || {};
-
-    const url = modelId
-        ? `/api/v2/workflow/instance/model/${encodeURIComponent(modelId)}`
-        : '/api/v2/workflow/instances';
-
-    const res = await requestWithRefresh<unknown>({
-        method: 'GET',
-        url: url,
-        params: { ...(rest || {}) },
-        headers: { 'Content-Type': 'application/json' },
-    });
-    return normalizePagedInstances(res.data);
+    return mockBackend.getInstances(params);
 }
 
 export async function loadInstanceData(id: string): Promise<Instance> {
-    const res = await requestWithRefresh<Instance>({
-        method: 'GET',
-        url: `/api/v2/workflow/instance/${encodeURIComponent(id)}`,
-        headers: { 'Content-Type': 'application/json' },
-    });
-    return res.data;
+    return mockBackend.getInstance(id);
 }
 
 export async function loadInstanceDataPublic(instanceId: string): Promise<Instance> {
-    const res = await requestWithRefresh<Instance>({
-        method: 'GET',
-        url: `/api/v2/workflow/public/instance/${encodeURIComponent(instanceId)}`,
-        headers: { 'Content-Type': 'application/json' },
-    });
-    return res.data;
+    return mockBackend.getInstance(instanceId);
 }
 
 export async function deleteInstance(instanceId: string): Promise<void> {
-    await requestWithRefresh<void>({
-        method: 'DELETE',
-        url: `/api/v2/workflow/instance/${encodeURIComponent(instanceId)}`,
-        withCredentials: true,
-        headers: { 'Content-Type': 'application/json' },
-    });
+    await mockBackend.deleteInstance(instanceId);
 }
 
 export async function invokeItem(instanceId: string, items: unknown): Promise<unknown> {
-    const res = await requestWithRefresh<unknown>({
-        method: 'POST',
-        url: `/api/v2/workflow/instance/${encodeURIComponent(instanceId)}/invoke/await`,
-        data: items,
-        withCredentials: true,
-        headers: { 'Content-Type': 'application/json' },
-    });
-
-    return res.data;
+    return mockBackend.invokeInstanceItem({ instanceId, items });
 }

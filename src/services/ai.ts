@@ -1,6 +1,6 @@
-import { requestWithRefresh } from "@/api/client";
 import { AIChatInput } from "@/services/types";
 import { v4 as uuidv4 } from 'uuid';
+import { mockBackend } from "./mockBackend";
 
 const UUIDChat = uuidv4();
 
@@ -15,11 +15,5 @@ export async function sendChatAI(input: AIChatInput): Promise<ChatAIResponse> {
         prompt: input.message
     }
 
-    const res = await requestWithRefresh<ChatAIResponse>({
-        method: 'POST',
-        url: `/api/chat`,
-        data,
-        headers: { 'Content-Type': 'application/json' },
-    });
-    return res.data;
+    return mockBackend.sendChat({ modelName: data.model_name, message: data.prompt });
 }

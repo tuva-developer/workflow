@@ -1,9 +1,9 @@
-import { requestWithRefresh } from '@/api/client';
 import {
   PagedTasks,
   TaskQuery,
 } from '@/services/types';
 import { asObject, asArray, asNumber, asBoolean } from '@/utils/typeGuards';
+import { mockBackend } from './mockBackend';
 
 export function normalizePaged(data: unknown): PagedTasks {
   const obj = asObject(data) ?? {};
@@ -26,80 +26,33 @@ export function normalizePaged(data: unknown): PagedTasks {
 }
 
 export async function loadTasks(params?: TaskQuery): Promise<PagedTasks> {
-  const res = await requestWithRefresh<unknown>({
-    method: 'GET',
-    url: '/api/v2/workflow/tasks/me',
-    params: { ...(params || {}) },
-    headers: { 'Content-Type': 'application/json' },
-  });
-  return normalizePaged(res.data);
+  return mockBackend.getTasks(params);
 }
 
 export async function loadTask(taskId: string): Promise<Task> {
-  const res = await requestWithRefresh<Task>({
-    method: 'GET',
-    url: `/api/v2/workflow/tasks/${encodeURIComponent(taskId)}`,
-    headers: { 'Content-Type': 'application/json' },
-  });
-  return res.data;
+  return mockBackend.getTask(taskId);
 }
 
 export async function executeTask(taskId: string, data: object): Promise<Task> {
-  const res = await requestWithRefresh<Task>({
-    method: 'POST',
-    url: `/api/v2/workflow/tasks/${encodeURIComponent(taskId)}/await`,
-    data,
-    headers: { 'Content-Type': 'application/json' },
-  });
-  return res.data;
+  return mockBackend.executeTask(taskId);
 }
 
 export async function executeTaskWithFile(taskId: string, file: File): Promise<Task> {
-  const res = await requestWithRefresh<Task>({
-    method: 'POST',
-    url: `/api/v2/workflow/tasks/${encodeURIComponent(taskId)}/await`,
-    data: file,
-    headers: { 'Content-Type': 'application/octet-stream' },
-    transformRequest: [(d) => d],
-  });
-  return res.data;
+  return mockBackend.executeTask(taskId);
 }
 
 export async function executeTaskWithMultipart(taskId: string, formData: FormData): Promise<Task> {
-  const res = await requestWithRefresh<Task>({
-    method: 'POST',
-    url: `/api/v2/workflow/tasks/${encodeURIComponent(taskId)}/await`,
-    data: formData,
-  });
-  return res.data;
+  return mockBackend.executeTask(taskId);
 }
 
 export async function debugTask(taskId: string, data: object): Promise<Task> {
-  const res = await requestWithRefresh<Task>({
-    method: 'POST',
-    url: `/api/v2/workflow/tasks/${encodeURIComponent(taskId)}/debug`,
-    data,
-    headers: { 'Content-Type': 'application/json' },
-  });
-  return res.data;
+  return mockBackend.executeTask(taskId);
 }
 
 export async function debugTaskWithFile(taskId: string, file: File): Promise<Task> {
-  const res = await requestWithRefresh<Task>({
-    method: 'POST',
-    url: `/api/v2/workflow/tasks/${encodeURIComponent(taskId)}/debug`,
-    data: file,
-    headers: { 'Content-Type': 'application/octet-stream' },
-    transformRequest: [(d) => d],
-  });
-  return res.data;
+  return mockBackend.executeTask(taskId);
 }
 
 export async function debugTaskWithMultipart(taskId: string, formData: FormData): Promise<Task> {
-  const res = await requestWithRefresh<Task>({
-    method: 'POST',
-    url: `/api/v2/workflow/tasks/${encodeURIComponent(taskId)}/debug`,
-    data: formData,
-  });
-  return res.data;
+  return mockBackend.executeTask(taskId);
 }
