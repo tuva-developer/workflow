@@ -160,16 +160,43 @@ function EditableModelTable() {
       field: "categoryId",
       headerName: t("Category"),
       flex: 1,
-      renderCell: (p) =>
-        modelCategories.find((c) => c._id === p.row.categoryId)?.name ??
-        t("null"),
+      renderCell: (p) => {
+        const categoryName =
+          modelCategories.find((c) => c._id === p.row.categoryId)?.name ?? null;
+        if (!categoryName)
+          return (
+            <span
+              style={{
+                fontStyle: "italic",
+                color: theme.palette.text.secondary,
+              }}
+            >
+              {t("No data")}
+            </span>
+          );
+        return <span>{categoryName}</span>;
+      },
     },
     {
       field: "typeId",
       headerName: t("Type"),
       flex: 1,
-      renderCell: (p) =>
-        modelTypes.find((tt) => tt._id === p.row.typeId)?.name ?? t("null"),
+      renderCell: (p) => {
+        const typeName =
+          modelTypes.find((c) => c._id === p.row.typeId)?.name ?? null;
+        if (!typeName)
+          return (
+            <span
+              style={{
+                fontStyle: "italic",
+                color: theme.palette.text.secondary,
+              }}
+            >
+              {t("No data")}
+            </span>
+          );
+        return <span>{typeName}</span>;
+      },
     },
     {
       field: "created_at",

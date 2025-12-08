@@ -282,20 +282,6 @@ export default function LoginPage() {
           </motion.div>
         </Container>
       </Box>
-      <Box
-        sx={{
-          width: "100%",
-          textAlign: "center",
-          mt: 6,
-          mb: 2,
-          color: theme.palette.text.secondary,
-          fontSize: 14,
-          letterSpacing: 1,
-          userSelect: "none",
-        }}
-      >
-        {t("© 2025 Vietbando Workflow | Version 2.0.0")}
-      </Box>
     </Box>
   );
 }

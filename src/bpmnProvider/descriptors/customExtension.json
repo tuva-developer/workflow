@@ -59,6 +59,19 @@
       ]
     },
     {
+      "name": "Metadata",
+      "superClass": [
+        "Element"
+      ],
+      "properties": [
+        {
+          "name": "value",
+          "type": "String",
+          "isBody": true
+        }
+      ]
+    },
+    {
       "name": "Script",
       "superClass": [
         "Element"
@@ -184,11 +197,6 @@
     {
       "name": "Assignee",
       "properties": [
-        {
-          "name": "name",
-          "isAttr": true,
-          "type": "String"
-        },
         {
           "name": "value",
           "isAttr": true,
@@ -437,6 +445,47 @@
           "name": "value",
           "isAttr": true,
           "type": "String"
+        }
+      ]
+    },
+    {
+      "name": "FunctionLibrary",
+      "superClass": [
+        "Element"
+      ],
+      "properties": [
+        {
+          "name": "functions",
+          "type": "Function",
+          "isMany": true
+        }
+      ]
+    },
+    {
+      "name": "Function",
+      "superClass": [
+        "Element"
+      ],
+      "properties": [
+        {
+          "name": "id",
+          "type": "String",
+          "isAttr": true
+        },
+        {
+          "name": "caption",
+          "type": "String",
+          "isAttr": true
+        },
+        {
+          "name": "value",
+          "type": "String",
+          "isAttr": true
+        },
+        {
+          "name": "code",
+          "type": "String",
+          "isBody": true
         }
       ]
     }

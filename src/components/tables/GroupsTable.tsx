@@ -5,6 +5,7 @@ import {
   Stack,
   Toolbar,
   Tooltip,
+  Typography,
   useTheme,
 } from "@mui/material";
 import { ChangeEvent, useCallback, useMemo, useState } from "react";
@@ -13,7 +14,7 @@ import { MdAdd, MdDelete, MdEdit } from "react-icons/md";
 import AddGroupDialog from "@/components/dialogs/AddGroupDlg";
 import UpdateGroupDlg from "@/components/dialogs/UpdateGroupDlg";
 import SearchTextField from "@/components/common/SearchTextField";
-import { defaultGroup, formatDate } from "@/utils/defines";
+import { defaultGroup } from "@/utils/defines";
 import { useAppContext } from "@/hooks/useAppContext";
 import CustomTablePagination from "@/components/common/CustomTablePagination";
 import ActionButton from "@/components/common/ActionButton";
@@ -22,6 +23,7 @@ import { useGroupsQuery } from "@/hooks/query/useGroupsQuery";
 import { GridColDef, GridRenderCellParams } from "@mui/x-data-grid";
 import GenericDataGrid from "@/components/common/GenericDataGrid";
 import { GroupQuery } from "@/services/types";
+import { DateCell } from "@/components/common/DateCell";
 
 function GroupsTable() {
   const theme = useTheme();
@@ -109,17 +111,63 @@ function GroupsTable() {
       sortable: false,
       filterable: false,
       minWidth: 300,
-      renderCell: (params: GridRenderCellParams<Group>) => (
-        <Stack
-          direction="row"
-          spacing={1}
-          alignItems="center"
-          height="100%"
-          width="100%"
-        >
-          {Array.isArray(params.row.members) && (
-            <>
-              {params.row.members.slice(0, 3).map((member) => (
+      renderCell: (params: GridRenderCellParams<Group>) => {
+        const members = Array.isArray(params.row.members)
+          ? params.row.members
+          : [];
+        const maxVisible = 2;
+        const visible = members.slice(0, maxVisible);
+        const remaining = Math.max(0, members.length - visible.length);
+
+        if (members.length === 0) {
+          return (
+            <Typography
+              component="span"
+              sx={{
+                fontStyle: "italic",
+                color: (t) => t.palette.text.secondary,
+                fontSize: 13,
+              }}
+            >
+              {t("No data")}
+            </Typography>
+          );
+        }
+
+        const tooltipTitle = (
+          <Stack direction="row" spacing={1} flexWrap="wrap" gap={0.5}>
+            {members.map((member, idx) => (
+              <Chip
+                key={`${member}-${idx}`}
+                label={member}
+                size="small"
+                sx={{
+                  fontSize: "0.75rem",
+                  borderRadius: 1,
+                  bgcolor: theme.palette.info.dark,
+                  color: theme.palette.common.white,
+                }}
+              />
+            ))}
+          </Stack>
+        );
+
+        return (
+          <Tooltip
+            title={members.length > maxVisible ? tooltipTitle : ""}
+            arrow
+            placement="top"
+          >
+            <Stack
+              direction="row"
+              spacing={1}
+              alignItems="center"
+              height="100%"
+              width="100%"
+              overflow="hidden"
+              sx={{ cursor: "help" }}
+            >
+              {visible.map((member) => (
                 <Chip
                   key={member}
                   label={member}
@@ -127,47 +175,40 @@ function GroupsTable() {
                   sx={{
                     fontSize: "0.75rem",
                     borderRadius: 1,
-                    bgcolor: "#1f2937",
+                    bgcolor: theme.palette.info.dark,
                     color: theme.palette.common.white,
                   }}
                 />
               ))}
 
-              {params.row.members.length > 3 && (
-                <Tooltip title={params.row.members.join(", ")} arrow>
-                  <Chip
-                    label={`+${params.row.members.length - 3}`}
-                    size="small"
-                    sx={{
-                      fontSize: "0.75rem",
-                      borderRadius: 1,
-                      bgcolor: "#374151",
-                      color: theme.palette.common.white,
-                      cursor: "pointer",
-                    }}
-                  />
-                </Tooltip>
+              {remaining > 0 && (
+                <Chip
+                  label={`+${remaining}`}
+                  size="small"
+                  sx={{
+                    fontSize: "0.75rem",
+                    borderRadius: 1,
+                    bgcolor: "#37415190",
+                    color: theme.palette.common.white,
+                  }}
+                />
               )}
-            </>
-          )}
-        </Stack>
-      ),
+            </Stack>
+          </Tooltip>
+        );
+      },
     },
     {
       field: "created_at",
       headerName: t("Created at"),
       flex: 1,
-      renderCell: (params: GridRenderCellParams<Group, string>) => (
-        <>{formatDate(params.row.updated_at)}</>
-      ),
+      renderCell: (params) => <DateCell value={params.value} />,
     },
     {
       field: "updated_at",
       headerName: t("Updated at"),
       flex: 1,
-      renderCell: (params: GridRenderCellParams<Group, string>) => (
-        <>{formatDate(params.row.updated_at)}</>
-      ),
+      renderCell: (params) => <DateCell value={params.value} />,
     },
     {
       field: "action",
@@ -225,7 +266,7 @@ function GroupsTable() {
         <SearchTextField
           value={searchText}
           onChangeDebounced={(val) => setSearchText(val)}
-          tooltip="Search (name, description, member)"
+          tooltip="Search (id, name, description)"
         />
         <Button
           variant="contained"

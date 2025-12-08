@@ -4,7 +4,6 @@ import BpmnEditor from "@/components/common/BpmnEditor";
 import FormBuilder from "@/components/common/FormBuilder";
 import usePageTitle from "@/hooks/usePageTitle";
 import AppBarCustom from "@/components/layout/AppBarCustom";
-import AIChatbox from "@/components/common/AIChatbox";
 import { MdDynamicForm, MdRebaseEdit } from "react-icons/md";
 
 const EditorPage = () => {
@@ -20,7 +19,6 @@ const EditorPage = () => {
         ]}
         setTabIndex={setTabIndex}
       />
-      <AIChatbox />
 
       <Box
         sx={{

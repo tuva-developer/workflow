@@ -6,9 +6,6 @@ import {
     DeleteTemplateInput,
 } from "@/services/types";
 import { asObject, asArray, asNumber, asBoolean } from '@/utils/typeGuards';
-import { getRuntimeConfig } from '@/utils/defines';
-import { delay, paginate } from '@/utils/mock';
-import { mockTemplates } from '@/mockData';
 
 export function normalizePaged(data: unknown): PagedTemplates {
     const obj = asObject(data) ?? {};
@@ -31,13 +28,6 @@ export function normalizePaged(data: unknown): PagedTemplates {
 }
 
 export async function loadTemplates(params?: TemplateQuery): Promise<PagedTemplates> {
-    const { MOCK_MODE } = getRuntimeConfig();
-    if (MOCK_MODE) {
-        await delay(200);
-        const page = params?.page ?? 1;
-        const limit = params?.limit ?? mockTemplates.length;
-        return paginate<Template>({ items: mockTemplates, page, limit });
-    }
     const res = await requestWithRefresh<unknown>({
         method: "GET",
         url: "/api/v2/workflow/templates",
@@ -49,19 +39,9 @@ export async function loadTemplates(params?: TemplateQuery): Promise<PagedTempla
 }
 
 export async function createTemplate(input: AddTemplateInput): Promise<Template> {
-    const { MOCK_MODE } = getRuntimeConfig();
-    if (MOCK_MODE) {
-        await delay(150);
-        return {
-            _id: `mock-tpl-${Date.now()}`,
-            name: input.name,
-            description: 'Mock template',
-            config: JSON.stringify(input.config ?? {}),
-        } as Template;
-    }
     const res = await requestWithRefresh<Template>({
         method: "POST",
-        url: `/api/v2/workflow/template?name=${encodeURIComponent(input.name)}`,
+        url: `/api/v2/workflow/template?name=${encodeURIComponent(input.name)}&description=${encodeURIComponent(input.description || '')}`,
         data: input.config,
         withCredentials: true,
         headers: { "Content-Type": "application/xml" },
@@ -70,11 +50,6 @@ export async function createTemplate(input: AddTemplateInput): Promise<Template>
 }
 
 export async function deleteTemplate(input: DeleteTemplateInput): Promise<void> {
-    const { MOCK_MODE } = getRuntimeConfig();
-    if (MOCK_MODE) {
-        await delay(100);
-        return;
-    }
     await requestWithRefresh<void>({
         method: "DELETE",
         url: `/api/v2/workflow/template/${encodeURIComponent(input.templateId)}`,

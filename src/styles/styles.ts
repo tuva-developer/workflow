@@ -153,3 +153,12 @@ export const Divider = styled(Box)(({ theme }) => ({
   margin: '0 2px',
   borderRadius: 1,
 }));
+
+export const StatusColors: Record<string, string> = {
+  completed: "#28a745",
+  failed: "#ef4444",
+  pending: "#FFB823",
+  running: "#007bff",
+  "not executed": "#FF7D29",
+  error: "#B91C1C",
+};

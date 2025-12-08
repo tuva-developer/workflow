@@ -11,9 +11,9 @@ import { GiDuration } from "react-icons/gi";
 import BpmnViewer from "bpmn-js/lib/Viewer";
 import MoveCanvasModule from "diagram-js/lib/navigation/movecanvas";
 import ZoomScrollModule from "diagram-js/lib/navigation/zoomscroll";
-import CustomRendererProvider from "@/bpmnProvider/CustomRendererProvider.js";
+import CustomRenderer from "@/bpmnProvider/provider/CustomRenderer.js";
 import { useTranslation } from "react-i18next";
-import SyntaxHighlighterTabs from "@/components/dialogs/ElementDetailDlg";
+import ElementDetailDlg from "@/components/dialogs/ElementDetailDlg";
 import { useInstanceQuery } from "@/hooks/query/useInstancesQuery";
 import { useNavigate } from "react-router-dom";
 
@@ -189,7 +189,7 @@ const InstanceView: React.FC<InstanceProps> = ({
           ZoomScrollModule,
           {
             __init__: ["customRendererProvider"],
-            customRendererProvider: ["type", CustomRendererProvider],
+            customRendererProvider: ["type", CustomRenderer],
           },
         ],
       });
@@ -662,7 +662,7 @@ const InstanceView: React.FC<InstanceProps> = ({
         )}
       </Box>
 
-      <SyntaxHighlighterTabs
+      <ElementDetailDlg
         open={isOpenSyntaxHighlighter}
         onClose={() => setIsOpenSyntaxHighlighter(false)}
         elementId={elementId}

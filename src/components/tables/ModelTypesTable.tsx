@@ -1,4 +1,4 @@
-import { defaultModelType, formatDate } from "@/utils/defines";
+import { defaultModelType } from "@/utils/defines";
 import { Box, Button, Toolbar, useTheme } from "@mui/material";
 import { ChangeEvent, useCallback, useMemo, useState } from "react";
 import { useTranslation } from "react-i18next";
@@ -14,6 +14,7 @@ import { useModelTypesQuery } from "@/hooks/query/useModelTypesQuery";
 import { GridColDef, GridRenderCellParams } from "@mui/x-data-grid";
 import GenericDataGrid from "@/components/common/GenericDataGrid";
 import { ModelTypeQuery } from "@/services/types";
+import { DateCell } from "@/components/common/DateCell";
 
 function ModelCategoryTable() {
   const theme = useTheme();
@@ -102,17 +103,15 @@ function ModelCategoryTable() {
       field: "created_at",
       headerName: t("Created at"),
       flex: 1,
-      renderCell: (params: GridRenderCellParams<ModelType, string>) => (
-        <>{formatDate(params.row.updated_at)}</>
-      ),
+            renderCell: (params) => <DateCell value={params.value} />,
+      
     },
     {
       field: "updated_at",
       headerName: t("Updated at"),
       flex: 1,
-      renderCell: (params: GridRenderCellParams<ModelType, string>) => (
-        <>{formatDate(params.row.updated_at)}</>
-      ),
+            renderCell: (params) => <DateCell value={params.value} />,
+      
     },
     {
       field: "action",

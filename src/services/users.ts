@@ -1,9 +1,6 @@
 import { requestWithRefresh } from '@/api/client';
 import { ChangePassWordInput, CreateUserInput, DeleteUserInput, PagedUsers, UpdateUserInput, UpdateUserRoleInput, UserQuery } from '@/services/types';
 import { asObject, asArray, asNumber, asBoolean } from '@/utils/typeGuards';
-import { getRuntimeConfig } from '@/utils/defines';
-import { delay, paginate } from '@/utils/mock';
-import { mockUsers } from '@/mockData';
 
 export function normalizePaged(data: unknown): PagedUsers {
   const obj = asObject(data) ?? {};
@@ -26,14 +23,6 @@ export function normalizePaged(data: unknown): PagedUsers {
 }
 
 export async function loadUsers(params?: UserQuery): Promise<PagedUsers> {
-  const { MOCK_MODE } = getRuntimeConfig();
-  if (MOCK_MODE) {
-    await delay(200);
-    const page = params?.page ?? 1;
-    const limit = params?.limit ?? mockUsers.length;
-    const paged = paginate<User>({ items: mockUsers, page, limit });
-    return paged;
-  }
   const res = await requestWithRefresh<unknown>({
     method: 'GET',
     url: '/tenants/users',
@@ -44,19 +33,6 @@ export async function loadUsers(params?: UserQuery): Promise<PagedUsers> {
 }
 
 export async function createUser(input: CreateUserInput): Promise<User> {
-  const { MOCK_MODE } = getRuntimeConfig();
-  if (MOCK_MODE) {
-    await delay(200);
-    const newUser: User = {
-      userId: input.username,
-      roles: [],
-      permissions: [],
-      joined_at: new Date().toISOString(),
-      updated_at: new Date().toISOString(),
-      tenantId: '',
-    };
-    return newUser;
-  }
   const params = new URLSearchParams();
   params.append('username', input.username);
   params.append('password', input.password);
@@ -76,40 +52,23 @@ export async function createUser(input: CreateUserInput): Promise<User> {
 }
 
 export async function deleteUser(input: DeleteUserInput): Promise<void> {
-  const { MOCK_MODE } = getRuntimeConfig();
-  if (MOCK_MODE) {
-    await delay(100);
-    return;
-  }
   await requestWithRefresh<void>({
     method: 'DELETE',
-    url: `/users/${encodeURIComponent(input.userId)}`,
+    url: `/users/${encodeURIComponent(input.userId)}?tenantId=${encodeURIComponent(input.tenantId)}`,
     headers: { 'Content-Type': 'application/json' },
   });
 }
 
 export async function updateUser(input: UpdateUserInput): Promise<User> {
-  const { MOCK_MODE } = getRuntimeConfig();
-  if (MOCK_MODE) {
-    await delay(150);
-    return {
-      userId: input.userId,
-      roles: [],
-      permissions: [],
-      joined_at: new Date().toISOString(),
-      updated_at: new Date().toISOString(),
-      tenantId: '',
-    };
-  }
   const payload: {
-    username: string;
+    tenantId?: string;
     email: string;
     phone: string;
     address: string;
     fullname: string;
     new_password?: string;
   } = {
-    username: input.username,
+    tenantId: input.tenantId,
     email: input.email,
     phone: input.phone,
     address: input.address,
@@ -122,7 +81,7 @@ export async function updateUser(input: UpdateUserInput): Promise<User> {
 
   const res = await requestWithRefresh<User>({
     method: "PATCH",
-    url: `/users/${encodeURIComponent(input.userId)}/info`,
+    url: `/users/${encodeURIComponent(input.userId)}/info?tenantId=${encodeURIComponent(input.tenantId ?? "")}`,
     data: payload,
     headers: { "Content-Type": "application/x-www-form-urlencoded" },
   });
@@ -131,33 +90,38 @@ export async function updateUser(input: UpdateUserInput): Promise<User> {
 }
 
 export async function updateUserRole(input: UpdateUserRoleInput): Promise<User> {
-  const { MOCK_MODE } = getRuntimeConfig();
-  if (MOCK_MODE) {
-    await delay(120);
-    return {
-      userId: input.userId,
-      roles: input.roles,
-      permissions: [],
-      joined_at: new Date().toISOString(),
-      updated_at: new Date().toISOString(),
-      tenantId: '',
-    };
-  }
   const res = await requestWithRefresh<User>({
     method: 'PATCH',
-    url: `/users/${encodeURIComponent(input.userId)}/set-roles`,
+    url: `/users/${encodeURIComponent(input.userId)}/set-roles?tenantId=${encodeURIComponent(input.tenantId)}`,
     data: input.roles,
     headers: { 'Content-Type': 'application/json' },
   });
   return res.data;
 }
 
+export async function updateMyProfile(input: UpdateUserInput): Promise<User> {
+  const payload: {
+    email: string;
+    phone: string;
+    address: string;
+    fullname: string;
+  } = {
+    email: input.email,
+    phone: input.phone,
+    address: input.address,
+    fullname: input.fullname,
+  };
+
+  const res = await requestWithRefresh<User>({
+    method: 'PATCH',
+    url: `/me/info`,
+    data: payload,
+    headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
+  });
+  return res.data;
+}
+
 export async function changePassword(input: ChangePassWordInput) {
-  const { MOCK_MODE } = getRuntimeConfig();
-  if (MOCK_MODE) {
-    await delay(100);
-    return;
-  }
   const data = new URLSearchParams();
   data.append('old_password', input.oldPassword);
   data.append('new_password', input.newPassword);

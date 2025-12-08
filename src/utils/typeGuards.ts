@@ -15,3 +15,7 @@ export const asNumber = (v: unknown, fallback: number): number => {
 
 export const asBoolean = (v: unknown, fallback: boolean): boolean =>
   typeof v === 'boolean' ? v : fallback;
+
+export function asString(value: unknown, fallback: string = ''): string {
+  return typeof value === 'string' ? value : fallback;
+}

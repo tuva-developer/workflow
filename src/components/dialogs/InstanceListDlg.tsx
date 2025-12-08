@@ -34,14 +34,7 @@ import {
 } from "@/hooks/query/useInstancesQuery";
 import { useDeleteInstance } from "@/hooks/mutations/useInstanceMutations";
 import { InstanceQuery } from "@/services/types";
-
-const StatusColors: Record<string, string> = {
-  completed: "#28a745",
-  failed: "#ef4444",
-  pending: "#FFB823",
-  running: "#007bff",
-  "not executed": "#FF7D29",
-};
+import { StatusColors } from "@/styles/styles";
 
 interface InstanceListProps {
   isOpen: boolean;
@@ -165,6 +158,7 @@ const InstanceListDialog: React.FC<InstanceListProps> = ({
     { value: "pending", label: t("Pending") },
     { value: "running", label: t("Running") },
     { value: "not executed", label: t("Not Executed") },
+    { value: "error", label: t("Error") },
   ];
 
   const params: InstanceQuery = useMemo(

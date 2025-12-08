@@ -17,12 +17,12 @@ import { useUser } from "@/hooks/useUser";
 import { useTheme } from "@mui/material/styles";
 import { useTranslation } from "react-i18next";
 import ChangePasswordDialog from "@/components/dialogs/ChangePasswordDlg";
-import FeatureUpdatingDialog from "@/components/common/FeatureUpdatingDlg";
 import { PiLockKeyFill } from "react-icons/pi";
 import { logout } from "@/auth/auth-api";
 import { useNavigate } from "react-router-dom";
 import { useQueryClient } from "@tanstack/react-query";
 import { RoleColors } from "@/utils/defines";
+import MyProfileDlg from "@/components/dialogs/MyProfileDlg";
 
 type ActionItemProps = {
   icon: React.ReactNode;
@@ -50,7 +50,9 @@ const ActionItem = ({
         cursor: onClick ? "pointer" : "default",
         borderRadius: 2,
         "&:hover": {
-          backgroundColor: onClick ? theme?.palette.action.hover : "transparent",
+          backgroundColor: onClick
+            ? theme?.palette.action.hover
+            : "transparent",
         },
       }}
       onClick={onClick}
@@ -190,9 +192,6 @@ export default function UserProfile() {
                   );
                 })}
               </Box>
-              <Typography fontSize={12} color="text.secondary">
-                {user?.joined_at || ""}
-              </Typography>
             </Box>
           </Stack>
 
@@ -238,9 +237,14 @@ export default function UserProfile() {
         open={isChangePasswordOpen}
         onClose={() => setChangePasswordOpen(false)}
       />
-      <FeatureUpdatingDialog
+
+      <MyProfileDlg
         open={isProfileDialogOpen}
         onClose={() => setProfileDialogOpen(false)}
+        loading={false}
+        keepMounted={false}
+        maxWidth="sm"
+        fullWidth
       />
     </>
   );

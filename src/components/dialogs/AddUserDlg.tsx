@@ -38,7 +38,14 @@ const AddUserDialog: React.FC<Props> = ({ isOpen, onClose }) => {
   const { t } = useTranslation();
 
   const schema = z.object({
-    username: z.string().trim().min(1, t("Username is required")),
+    username: z
+      .string()
+      .trim()
+      .min(1, t("Username is required"))
+      .regex(
+        /^[a-z0-9_-]+$/,
+        t("Username must be lowercase, without spaces or special characters")
+      ),
     password: z.string().min(6, t("Password must be at least 6 characters")),
     fullname: z.string().trim().min(1, t("Full name is required")),
     email: z.string().email(t("Invalid email address")),

@@ -5,7 +5,7 @@ import ThemeChange from "@/components/common/ThemeChange";
 import HomeButton from "@/components/common/HomeButton";
 import UserProfile from "@/components/common/UserProfile";
 import LanguageSelector from "@/components/common/LanguageSelector";
-import { IconType } from "react-icons/lib";
+import type { IconType } from "react-icons/lib";
 
 interface TabItem {
   label: string;
@@ -14,22 +14,18 @@ interface TabItem {
 
 interface AppBarCustomProps {
   tabs: TabItem[];
-  setTabIndex?: (tabIndex) => void;
+  setTabIndex?: (tabIndex: number) => void;
   isLimit?: boolean;
 }
 
-function AppBarCustom({
-  tabs,
-  setTabIndex,
-  isLimit = false,
-}: AppBarCustomProps) {
+function AppBarCustom({ tabs, setTabIndex, isLimit = false }: AppBarCustomProps) {
   const theme = useTheme();
   const { t } = useTranslation();
   const [index, setIndex] = useState(0);
 
   const handleTabChange = (_event: React.SyntheticEvent, newValue: number) => {
     setIndex(newValue);
-    if (setTabIndex) setTabIndex(newValue);
+    setTabIndex?.(newValue);
   };
 
   return (
@@ -37,78 +33,97 @@ function AppBarCustom({
       position="static"
       elevation={0}
       sx={{
-        height: 50,
+        height: 56,
         flexShrink: 0,
         zIndex: theme.zIndex.appBar,
-        bgcolor: theme.palette.background.default,
-        borderBottom: `1px solid ${theme.palette.divider}`,
-        borderRadius: 0,
+        bgcolor: "transparent",
         boxShadow: "none",
+        borderBottom: `1px solid ${theme.palette.divider}`,
+        backdropFilter: "blur(10px)",
       }}
     >
       <Toolbar
         sx={{
           display: "flex",
           alignItems: "center",
-          pr: 1,
-          gap: 1,
-          "&.MuiToolbar-root": {
-            minHeight: 50,
-            pl: 1,
-          },
+          gap: 1.5,
+          minHeight: 56,
+          px: 2,
         }}
       >
         <Box
           sx={{
             display: "flex",
             alignItems: "center",
+            gap: 1.5,
             flexShrink: 0,
+            minWidth: 0,
           }}
         >
+          {!isLimit && (
+            <Box sx={{ mr: 0.5 }}>
+              <HomeButton />
+            </Box>
+          )}
+
           <Tabs
             value={index}
             onChange={handleTabChange}
-            textColor="primary"
+            variant="scrollable"
+            allowScrollButtonsMobile
             TabIndicatorProps={{
               sx: {
-                top: "unset",
-                bottom: "unset",
+                display: "none",
               },
             }}
             sx={{
+              minHeight: 40,
+              "& .MuiTabs-flexContainer": {
+                gap: 0.5,
+              },
               "& .MuiTab-root": {
+                textTransform: "none",
+                minHeight: 36,
+                height: 36,
+                borderRadius: 999,
+                padding: "4px 12px",
+                fontSize: 12,
+                fontWeight: 500,
+                letterSpacing: 0.3,
                 color: theme.palette.text.secondary,
-                fontSize: 11,
-                fontWeight: 600,
-                letterSpacing: 0.5,
+                alignItems: "center",
+                justifyContent: "center",
+                gap: 0.5,
+                transition: "all 0.18s ease",
+                "& svg": {
+                  fontSize: 16,
+                },
                 "&:hover": {
-                  color: theme.palette.primary.main,
+                  backgroundColor: theme.palette.action.hover,
+                  color: theme.palette.text.primary,
                 },
                 "&.Mui-selected": {
-                  backgroundColor: theme.palette.background.default,
+                  background: `linear-gradient(135deg, ${theme.palette.primary.main}20, ${theme.palette.primary.main}40)`,
                   color: theme.palette.primary.main,
-                  borderLeft: `1px solid ${theme.palette.divider}`,
-                  borderRight: `1px solid ${theme.palette.divider}`,
-                  borderTop: `2px solid ${theme.palette.primary.main}`,
-                  zIndex: 1,
+                  boxShadow: "0 0 0 1px rgba(0,0,0,0.02)",
                 },
               },
             }}
           >
-            {tabs.map((tab, index) => (
-              <Tab
-                key={index}
-                label={t(tab.label)}
-                icon={tab.icon ? <tab.icon size={16} /> : undefined}
-                iconPosition="start"
-                sx={{
-                  color: theme.palette.text.primary,
-                  minHeight: 50,
-                }}
-              />
-            ))}
+            {tabs.map((tab, tabIndex) => {
+              const Icon = tab.icon;
+              return (
+                <Tab
+                  key={tabIndex}
+                  label={t(tab.label)}
+                  icon={Icon ? <Icon size={15} /> : undefined}
+                  iconPosition="start"
+                />
+              );
+            })}
           </Tabs>
         </Box>
+
         <Box
           sx={{
             flexGrow: 1,
@@ -119,7 +134,6 @@ function AppBarCustom({
             minWidth: 0,
           }}
         >
-          {!isLimit && <HomeButton />}
           <ThemeChange />
           <LanguageSelector />
           {!isLimit && <UserProfile />}

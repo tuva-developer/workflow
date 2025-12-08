@@ -1,6 +1,6 @@
 import "react-toastify/dist/ReactToastify.css";
 import { ChangeEvent, useCallback, useEffect, useMemo, useState } from "react";
-import { Toolbar, Box, useTheme } from "@mui/material";
+import { Toolbar, Box, useTheme, Typography, Tooltip } from "@mui/material";
 import { GridColDef, GridRenderCellParams } from "@mui/x-data-grid";
 import ExecuteTaskDlg from "@/components/dialogs/ExecuteTaskDlg";
 import { useTranslation } from "react-i18next";
@@ -11,30 +11,11 @@ import ActionButton from "@/components/common/ActionButton";
 import ButtonRefresh from "@/components/common/ButtonRefresh";
 import CustomTablePagination from "@/components/common/CustomTablePagination";
 import GenericDataGrid from "@/components/common/GenericDataGrid";
-import { formatDate } from "@/utils/defines";
 import { TaskQuery } from "@/services/types";
 import { useTasksQuery } from "@/hooks/query/useTasksQuery";
-
-type Task = {
-  taskId: string;
-  activityId: string;
-  status: string;
-  assigneeType: string;
-  assigneeId: string;
-  instanceId: string;
-  created_at: string;
-  updated_at: string;
-};
-
-type AssignedToFilter = "all" | "user" | "group" | "manual";
-
-const StatusColors: Record<string, string> = {
-  completed: "#28a745",
-  failed: "#ef4444",
-  pending: "#FFB823",
-  running: "#007bff",
-  "not executed": "#FF7D29",
-};
+import { FaUser, FaUsers } from "react-icons/fa6";
+import { DateCell } from "@/components/common/DateCell";
+import { StatusColors } from "@/styles/styles";
 
 function TasksTable() {
   const theme = useTheme();
@@ -42,8 +23,6 @@ function TasksTable() {
 
   const [searchText, setSearchText] = useState("");
   const [filterStatus, setFilterStatus] = useState("all");
-  const [filterAssignedTo, setFilterAssignedTo] =
-    useState<AssignedToFilter>("all");
   const [sortBy, setSortBy] = useState<keyof User>("updated_at");
   const [orderBy, setOrderBy] = useState<"asc" | "desc">("desc");
   const [page, setPage] = useState(0);
@@ -59,13 +38,7 @@ function TasksTable() {
     { value: "pending", label: t("Pending") },
     { value: "running", label: t("Running") },
     { value: "not executed", label: t("Not Executed") },
-  ];
-
-  const assignOptions = [
-    { value: "all", label: t("All") },
-    { value: "user", label: t("User") },
-    { value: "group", label: t("Group") },
-    { value: "manual", label: t("Manual") },
+    { value: "error", label: t("Error") },
   ];
 
   const params: TaskQuery = useMemo(
@@ -74,19 +47,10 @@ function TasksTable() {
       page: page + 1,
       search: searchText || undefined,
       status: filterStatus !== "all" ? filterStatus : undefined,
-      userId: filterAssignedTo !== "all" ? filterAssignedTo : undefined,
       sortBy: sortBy || undefined,
       orderBy: orderBy || undefined,
     }),
-    [
-      rowsPerPage,
-      page,
-      searchText,
-      filterStatus,
-      filterAssignedTo,
-      sortBy,
-      orderBy,
-    ]
+    [rowsPerPage, page, searchText, filterStatus, sortBy, orderBy]
   );
 
   const { data, refetch } = useTasksQuery(params, true);
@@ -95,7 +59,7 @@ function TasksTable() {
 
   useEffect(() => {
     setPage(0);
-  }, [rowsPerPage, searchText, filterStatus, filterAssignedTo]);
+  }, [rowsPerPage, searchText, filterStatus]);
 
   const handleActionClick = (id: string) => {
     setTaskId(id);
@@ -123,8 +87,165 @@ function TasksTable() {
     }
   };
 
+  const renderAssigneeCell = (params: GridRenderCellParams<Task>) => {
+    const assignees = (params.row.assignee ?? []) as Assignee[];
+
+    if (!assignees.length) {
+      return (
+        <Typography
+          component="span"
+          sx={{
+            fontStyle: "italic",
+            color: (t) => t.palette.text.secondary,
+            fontSize: 13,
+          }}
+        >
+          {t("No data")}
+        </Typography>
+      );
+    }
+
+    const items = assignees
+      .map((a) =>
+        "user" in a && a.user
+          ? { type: "user" as const, value: a.user }
+          : "group" in a && a.group
+          ? { type: "group" as const, value: a.group }
+          : null
+      )
+      .filter(Boolean) as Array<{ type: "user" | "group"; value: string }>;
+
+    const users = items.filter((i) => i.type === "user").map((i) => i.value);
+    const groups = items.filter((i) => i.type === "group").map((i) => i.value);
+
+    const tooltipTitle = (
+      <Box sx={{ maxWidth: 500 }}>
+        {users.length > 0 && (
+          <Box sx={{ mb: groups.length ? 1 : 0 }}>
+            <Typography variant="subtitle2" sx={{ fontWeight: 600, mb: 0.5 }}>
+              {t("Users") + ":"}
+            </Typography>
+            <Typography
+              variant="body2"
+              sx={{ whiteSpace: "pre-wrap", wordBreak: "break-word" }}
+            >
+              {users.join(", ")}
+            </Typography>
+          </Box>
+        )}
+        {groups.length > 0 && (
+          <Box>
+            <Typography variant="subtitle2" sx={{ fontWeight: 600, mb: 0.5 }}>
+              {t("Groups") + ":"}
+            </Typography>
+            <Typography
+              variant="body2"
+              sx={{ whiteSpace: "pre-wrap", wordBreak: "break-all" }}
+            >
+              {groups.join(", ")}
+            </Typography>
+          </Box>
+        )}
+      </Box>
+    );
+
+    return (
+      <Tooltip title={tooltipTitle} arrow placement="top">
+        <Box
+          sx={{
+            display: "flex",
+            alignItems: "center",
+            gap: 1.5,
+            width: "100%",
+            height: "100%",
+            cursor: "help",
+          }}
+        >
+          {users.length >= 0 && (
+            <Box sx={{ display: "flex", alignItems: "center", gap: 0.5 }}>
+              <FaUser size={14} color={theme.palette.info.main} />
+              <Typography sx={{ fontSize: 13 }} noWrap>
+                {t("Users")}:{" "}
+                <Typography
+                  component="span"
+                  sx={{
+                    display: "inline-flex",
+                    alignItems: "center",
+                    justifyContent: "center",
+                    width: 24,
+                    height: 24,
+                    ml: 0.5,
+                    borderRadius: "50%",
+                    fontSize: 12,
+                    fontWeight: 400,
+                    color: (theme) =>
+                      users.length === 0
+                        ? theme.palette.text.secondary
+                        : theme.palette.info.main,
+                    border: (theme) =>
+                      `1px solid ${
+                        users.length === 0
+                          ? theme.palette.text.secondary
+                          : theme.palette.info.main
+                      }`,
+                    backgroundColor: (theme) =>
+                      users.length === 0
+                        ? theme.palette.action.hover
+                        : `${theme.palette.info.main}10`,
+                  }}
+                >
+                  {users.length}
+                </Typography>
+              </Typography>
+            </Box>
+          )}
+          {groups.length >= 0 && (
+            <Box sx={{ display: "flex", alignItems: "center", gap: 0.5 }}>
+              <FaUsers size={18} color={theme.palette.info.main} />
+              <Typography sx={{ fontSize: 13 }} noWrap>
+                {t("Groups")}:{" "}
+                <Typography
+                  component="span"
+                  sx={{
+                    display: "inline-flex",
+                    alignItems: "center",
+                    justifyContent: "center",
+                    width: 24,
+                    height: 24,
+                    ml: 0.5,
+                    borderRadius: "50%",
+                    fontSize: 12,
+                    fontWeight: 400,
+                    color: (theme) =>
+                      groups.length === 0
+                        ? theme.palette.text.secondary
+                        : theme.palette.info.main,
+                    border: (theme) =>
+                      `1px solid ${
+                        groups.length === 0
+                          ? theme.palette.text.secondary
+                          : theme.palette.info.main
+                      }`,
+                    backgroundColor: (theme) =>
+                      groups.length === 0
+                        ? theme.palette.action.hover
+                        : `${theme.palette.info.main}10`,
+                  }}
+                >
+                  {groups.length}
+                </Typography>
+              </Typography>
+            </Box>
+          )}
+        </Box>
+      </Tooltip>
+    );
+  };
+
   const columns: GridColDef<Task>[] = [
-    { field: "activityId", headerName: t("Task"), flex: 1 },
+    { field: "taskId", headerName: t("Task ID"), flex: 1 },
+    { field: "activityId", headerName: t("Activity ID"), flex: 1 },
+    { field: "name", headerName: t("Name"), flex: 1 },
     {
       field: "status",
       headerName: t("Status"),
@@ -151,25 +272,27 @@ function TasksTable() {
         );
       },
     },
-    { field: "assigneeType", headerName: t("Assigned to"), flex: 1 },
-    { field: "assigneeId", headerName: t("User/Group Assigned"), flex: 1 },
+    {
+      field: "assignee",
+      headerName: t("Assignee"),
+      flex: 1,
+      minWidth: 250,
+      sortable: false,
+      renderCell: renderAssigneeCell,
+    },
     { field: "instanceId", headerName: t("Instance ID"), flex: 1 },
-    { field: "taskId", headerName: t("Task ID"), flex: 1 },
+    { field: "modelId", headerName: t("Model ID"), flex: 1 },
     {
       field: "created_at",
       headerName: t("Created at"),
       flex: 1,
-      renderCell: (params: GridRenderCellParams<Task, string>) => (
-        <span>{formatDate(params.row.created_at)}</span>
-      ),
+      renderCell: (params) => <DateCell value={params.value} />,
     },
     {
       field: "updated_at",
       headerName: t("Updated at"),
       flex: 1,
-      renderCell: (params: GridRenderCellParams<Task, string>) => (
-        <span>{formatDate(params.row.updated_at)}</span>
-      ),
+      renderCell: (params) => <DateCell value={params.value} />,
     },
     {
       field: "action",
@@ -187,7 +310,7 @@ function TasksTable() {
           color={theme.palette.primary.main}
           tooltip={t("Handle")}
           onClick={() => handleActionClick(params.row.taskId)}
-          disabled={params.row.status?.toLowerCase?.() === "completed"}
+          disabled={params.row.status?.toLowerCase?.() === "completed" || params.row.status?.toLowerCase?.() === "running"}
         />
       ),
     },
@@ -217,19 +340,11 @@ function TasksTable() {
             options={statusOptions}
           />
 
-          <CustomSelect
-            label={t("Assigned to")}
-            value={filterAssignedTo}
-            onChange={(e) => setFilterAssignedTo(e.target.value as AssignedToFilter)}
-            options={assignOptions}
-          />
-
           <ButtonRefresh
             onRefreshData={refetch}
             onRefreshFilter={() => {
               setSearchText("");
               setFilterStatus("all");
-              setFilterAssignedTo("all");
             }}
             sx={{ mt: 0.5 }}
           />

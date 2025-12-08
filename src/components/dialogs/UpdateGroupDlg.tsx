@@ -1,4 +1,10 @@
-import React, { useEffect, useMemo, useState } from "react";
+import React, {
+  ChangeEvent,
+  useCallback,
+  useEffect,
+  useMemo,
+  useState,
+} from "react";
 import {
   Dialog,
   DialogTitle,
@@ -18,6 +24,8 @@ import SearchTextField from "@/components/common/SearchTextField";
 import { useUsersQuery } from "@/hooks/query/useUsersQuery";
 import { useUpdateGroup } from "@/hooks/mutations/useGroupMutations";
 import CustomTextField from "@/components/common/CustomTextField";
+import CustomTablePagination from "@/components/common/CustomTablePagination";
+import { UserQuery } from "@/services/types";
 
 interface UpdateUserGroupDialogProps {
   isOpen: boolean;
@@ -36,16 +44,33 @@ const UpdateUserGroupDialog: React.FC<UpdateUserGroupDialogProps> = ({
   const [selectedUsers, setSelectedUsers] = useState<string[]>(
     Array.isArray(group?.members) ? group.members : []
   );
-  const [searchText, setSearchText] = useState<string>("");
+
+  const [searchText, setSearchText] = useState("");
   const [groupName, setGroupName] = useState<string>(group?.name ?? "");
   const [groupDescription, setGroupDescription] = useState<string>(
     group?.description ?? ""
   );
+  const [page, setPage] = useState(0);
+  const [rowsPerPage, setRowsPerPage] = useState(25);
 
-  const { data } = useUsersQuery(undefined, isOpen);
-  const users = useMemo(() => data?.items ?? [], [data]);
+  const params: UserQuery = useMemo(
+    () => ({
+      limit: rowsPerPage,
+      page: page + 1,
+      search: searchText || undefined,
+    }),
+    [rowsPerPage, page, searchText]
+  );
+
+  const { data } = useUsersQuery(params, true);
+  const users = data?.items ?? [];
+  const totalUsers = data?.total ?? 0;
 
   const updateGroupMutation = useUpdateGroup();
+
+  useEffect(() => {
+    setPage(0);
+  }, [rowsPerPage, searchText]);
 
   useEffect(() => {
     if (isOpen) {
@@ -54,12 +79,6 @@ const UpdateUserGroupDialog: React.FC<UpdateUserGroupDialogProps> = ({
       setGroupDescription(group?.description ?? "");
     }
   }, [isOpen, group]);
-
-  const filteredUsers = useMemo(() => {
-    const q = searchText.trim().toLowerCase();
-    if (!q) return users;
-    return users.filter((u) => u.userId?.toLowerCase().includes(q));
-  }, [users, searchText]);
 
   async function handleClickUpdate() {
     if (updateGroupMutation.isPending) return;
@@ -93,6 +112,17 @@ const UpdateUserGroupDialog: React.FC<UpdateUserGroupDialogProps> = ({
       handleClickUpdate();
     }
   };
+
+  const handleChangePage = (_event: unknown, newPage: number) =>
+    setPage(newPage);
+
+  const handleChangeRowsPerPage = useCallback(
+    (e: ChangeEvent<HTMLInputElement>) => {
+      setRowsPerPage(parseInt(e.target.value, 10));
+      setPage(0);
+    },
+    []
+  );
 
   return (
     <Dialog
@@ -140,9 +170,8 @@ const UpdateUserGroupDialog: React.FC<UpdateUserGroupDialogProps> = ({
           <SearchTextField
             value={searchText}
             onChangeDebounced={(val) => setSearchText(val)}
-            sx={{ mb: 1.5 }}
-            tooltip="Search user"
-            width={"100%"}
+            tooltip="Search by user id"
+            width="100%"
           />
 
           <Box
@@ -153,7 +182,7 @@ const UpdateUserGroupDialog: React.FC<UpdateUserGroupDialogProps> = ({
               alignItems: "center",
             }}
           >
-            {filteredUsers.map((user) => (
+            {users.map((user) => (
               <FormControlLabel
                 key={user.userId}
                 control={
@@ -181,6 +210,14 @@ const UpdateUserGroupDialog: React.FC<UpdateUserGroupDialogProps> = ({
               />
             ))}
           </Box>
+
+          <CustomTablePagination
+            count={totalUsers}
+            rowsPerPage={rowsPerPage}
+            page={page}
+            onPageChange={handleChangePage}
+            onRowsPerPageChange={handleChangeRowsPerPage}
+          />
         </Box>
       </DialogContent>
 

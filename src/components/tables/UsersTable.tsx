@@ -1,5 +1,5 @@
-import { useMemo, useState, useCallback, ChangeEvent } from "react";
-import { Box, Button, Chip, Stack, Toolbar } from "@mui/material";
+import { useMemo, useState, useCallback, ChangeEvent, useEffect } from "react";
+import { Box, Button, Chip, Stack, Toolbar, Tooltip } from "@mui/material";
 import { MdAdd, MdDelete, MdEdit } from "react-icons/md";
 import { useTheme } from "@mui/material/styles";
 import { useTranslation } from "react-i18next";
@@ -7,7 +7,6 @@ import UpdateUserRoleDialog from "@/components/dialogs/UpdateUserRoleDlg";
 import SearchTextField from "@/components/common/SearchTextField";
 import { PiUserGear } from "react-icons/pi";
 import CustomTablePagination from "@/components/common/CustomTablePagination";
-import CustomSelect from "@/components/common/CustomSelect";
 import ActionButton from "@/components/common/ActionButton";
 import { useUsersQuery } from "@/hooks/query/useUsersQuery";
 import { useDeleteUser } from "@/hooks/mutations/useUserMutations";
@@ -15,26 +14,21 @@ import AddUserDlg from "@/components/dialogs/AddUserDlg";
 import { useAppContext } from "@/hooks/useAppContext";
 import { GridColDef, GridRenderCellParams } from "@mui/x-data-grid";
 import GenericDataGrid from "@/components/common/GenericDataGrid";
-import { defaultUser, formatDate, RoleColors } from "@/utils/defines";
+import { defaultUser, RoleColors } from "@/utils/defines";
 import UpdateUserDialog from "@/components/dialogs/UpdateUserDlg";
 import { UserQuery } from "@/services/types";
-
-type UserRole =
-  | "All"
-  | "User"
-  | "Executor"
-  | "Editor"
-  | "Invoker"
-  | "Admin"
-  | "SuperAdmin";
+import { DateCell } from "@/components/common/DateCell";
+import FilterUserRoleDlg from "@/components/dialogs/FilterUserRoleDlg";
+import { CiFilter } from "react-icons/ci";
 
 function UserTable() {
   const theme = useTheme();
   const { t } = useTranslation();
   const { openConfirm, closeConfirm } = useAppContext();
 
+  const [isOpenFilter, setIsOpenFilter] = useState(false);
   const [searchText, setSearchText] = useState("");
-  const [filterRole, setFilterRole] = useState<UserRole>("All");
+  const [filterRole, setFilterRole] = useState<UserRole[]>([]);
   const [sortBy, setSortBy] = useState<keyof User>("updated_at");
   const [orderBy, setOrderBy] = useState<"asc" | "desc">("desc");
   const [page, setPage] = useState(0);
@@ -46,43 +40,34 @@ function UserTable() {
   const [isUpdateUserDialogOpen, setIsUpdateUserDialogOpen] = useState(false);
   const [userToUpdate, setUserToUpdate] = useState<User>(defaultUser);
 
-  const userRoleOptions = useMemo(
-    () => [
-      { value: "All", label: t("All") },
-      { value: "User", label: t("User") },
-      { value: "Executor", label: t("Executor") },
-      { value: "Editor", label: t("Editor") },
-      { value: "Invoker", label: t("Invoker") },
-      { value: "Admin", label: t("Admin") },
-      { value: "SuperAdmin", label: t("SuperAdmin") },
-    ],
-    [t]
-  );
-
-  const params: UserQuery = useMemo(
-    () => ({
+  const params: UserQuery = useMemo(() => {
+    const roles = filterRole.length > 0 ? filterRole.join(",") : undefined;
+    return {
       limit: rowsPerPage,
       page: page + 1,
       search: searchText || undefined,
-      role: filterRole === "All" ? undefined : filterRole,
+      roles,
       sortBy: sortBy || undefined,
       orderBy: orderBy || undefined,
-    }),
-    [rowsPerPage, page, searchText, filterRole, sortBy, orderBy]
-  );
+    };
+  }, [rowsPerPage, page, searchText, filterRole, sortBy, orderBy]);
 
   const deleteUserMutation = useDeleteUser();
   const { data } = useUsersQuery(params, true);
   const users = data?.items ?? [];
   const totalUsers = data?.total ?? 0;
 
+  useEffect(() => {
+    setPage(0);
+  }, [rowsPerPage, searchText, filterRole]);
+
   const handleDeleteUser = useCallback(
-    (userId: string) => {
+    (userId: string, tenantId: string) => {
       openConfirm({
         title: t("Delete User"),
         message: t("Are you sure you want to delete this user?"),
         onOk: async () => {
-          await deleteUserMutation.mutateAsync({ userId });
+          await deleteUserMutation.mutateAsync({ userId, tenantId });
           closeConfirm();
         },
       });
@@ -132,58 +117,119 @@ function UserTable() {
       field: "roles",
       headerName: t("Roles"),
       flex: 1,
-      minWidth: 540,
+      minWidth: 320,
       sortable: false,
       filterable: false,
-      renderCell: (p: GridRenderCellParams<User>) => (
-        <Stack
-          direction="row"
-          spacing={1}
-          alignItems="center"
-          height="100%"
-          width="100%"
-        >
-          {p.row.roles.map((role) => {
-            const mode: "light" | "dark" =
-              theme.palette.mode === "dark" ? "dark" : "light";
-            const color =
-              RoleColors[mode][role] ??
-              (mode === "dark" ? "rgba(255,255,255,0.7)" : "rgba(0,0,0,0.7)");
+      renderCell: (p: GridRenderCellParams<User>) => {
+        const roles = p.row.roles ?? [];
+        const maxVisible = 2;
+        const visible = roles.slice(0, maxVisible);
+        const remaining = roles.length - visible.length;
 
-            return (
-              <Chip
-                key={role}
-                label={t(role)}
-                size="small"
-                variant="outlined"
-                sx={{
-                  fontSize: 11,
-                  borderRadius: 1,
-                  color,
-                  bgcolor: `${color}30`,
-                  borderColor: "transparent",
-                }}
-              />
-            );
-          })}
-        </Stack>
-      ),
+        const tooltipTitle = (
+          <Stack direction="row" spacing={1} flexWrap="wrap" gap={0.5}>
+            {roles.map((role) => {
+              const mode: "light" | "dark" = "dark";
+              const color =
+                RoleColors[mode][role] ??
+                (mode === "dark"
+                  ? "rgba(255,255,255,0.7)"
+                  : "rgba(109, 9, 9, 0.7)");
+
+              return (
+                <Chip
+                  key={role}
+                  label={t(role)}
+                  size="small"
+                  variant="outlined"
+                  sx={{
+                    fontSize: 11,
+                    borderRadius: 1,
+                    color,
+                    bgcolor: `${color}30`,
+                    borderColor: "transparent",
+                  }}
+                />
+              );
+            })}
+          </Stack>
+        );
+
+        return (
+          <Tooltip
+            title={roles.length > maxVisible ? tooltipTitle : ""}
+            arrow
+            placement="top"
+          >
+            <Stack
+              direction="row"
+              spacing={1}
+              alignItems="center"
+              height="100%"
+              width="100%"
+              overflow="hidden"
+              sx={{
+                cursor: "help",
+              }}
+            >
+              {visible.map((role) => {
+                const mode: "light" | "dark" =
+                  theme.palette.mode === "dark" ? "dark" : "light";
+                const color =
+                  RoleColors[mode][role] ??
+                  (mode === "dark"
+                    ? "rgba(255,255,255,0.7)"
+                    : "rgba(0,0,0,0.7)");
+
+                return (
+                  <Chip
+                    key={role}
+                    label={t(role)}
+                    size="small"
+                    variant="outlined"
+                    sx={{
+                      fontSize: 11,
+                      borderRadius: 1,
+                      color,
+                      bgcolor: `${color}30`,
+                      borderColor: "transparent",
+                    }}
+                  />
+                );
+              })}
+              {remaining > 0 && (
+                <Chip
+                  size="small"
+                  label={`+${remaining}`}
+                  variant="outlined"
+                  sx={{
+                    fontSize: 11,
+                    borderRadius: 1,
+                    borderColor: "transparent",
+                    color: theme.palette.text.secondary,
+                    bgcolor:
+                      theme.palette.mode === "dark"
+                        ? "rgba(255,255,255,0.1)"
+                        : "rgba(0,0,0,0.05)",
+                  }}
+                />
+              )}
+            </Stack>
+          </Tooltip>
+        );
+      },
     },
     {
-      field: "joined_at",
-      headerName: t("Joined at"),
+      field: "created_at",
+      headerName: t("Created at"),
       flex: 1,
-      renderCell: (params: GridRenderCellParams<User, string>) => (
-        <>{formatDate(params.row.joined_at)}</>
-      ),
+      renderCell: (params) => <DateCell value={params.value} />,
     },
     {
       field: "updated_at",
       headerName: t("Updated at"),
       flex: 1,
-      renderCell: (params: GridRenderCellParams<User, string>) => (
-        <>{formatDate(params.row.updated_at)}</>
-      ),
+      renderCell: (params) => <DateCell value={params.value} />,
     },
     {
       field: "action",
@@ -221,7 +267,9 @@ function UserTable() {
             icon={<MdDelete size={20} />}
             color={theme.palette.error.main}
             tooltip={t("Delete")}
-            onClick={() => handleDeleteUser(params.row.userId)}
+            onClick={() =>
+              handleDeleteUser(params.row.userId, params.row.tenantId)
+            }
           />
         </Box>
       ),
@@ -242,13 +290,23 @@ function UserTable() {
           <SearchTextField
             value={searchText}
             onChangeDebounced={(val) => setSearchText(val)}
+            tooltip="Search by user id"
           />
 
-          <CustomSelect
-            label={t("Role")}
+          <Button
+            variant="contained"
+            onClick={() => setIsOpenFilter(true)}
+            sx={{ gap: 0.5, fontSize: 12 }}
+          >
+            <CiFilter size={20} />
+            {t("Filter roles")}
+          </Button>
+
+          <FilterUserRoleDlg
+            isOpen={isOpenFilter}
             value={filterRole}
-            onChange={(e) => setFilterRole(e.target.value as UserRole)}
-            options={userRoleOptions}
+            onClose={() => setIsOpenFilter(false)}
+            onApply={(roles) => setFilterRole(roles)}
           />
         </Box>
 

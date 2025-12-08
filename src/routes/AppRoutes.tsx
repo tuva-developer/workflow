@@ -11,13 +11,19 @@ import EditorPage from "@/components/pages/EditorPage";
 import ModelsPage from "@/components/pages/ModelsPage";
 import InstancesPage from "@/components/pages/InstancesPage";
 import SchedulesPage from "@/components/pages/SchedulesPage";
+import LoginByTokenPage from "@/components/pages/LoginByTokenPage";
 
 export default function AppRoutes() {
   return (
     <Routes>
       <Route path="/login" element={<LoginPage />} />
       <Route path="/message_error" element={<MessageError />} />
-      <Route path="/public/instance/:instanceId" element={<InstanceViewPage />} />
+      <Route
+        path="/public/instance/:instanceId"
+        element={<InstanceViewPage />}
+      />
+      <Route path="/login-by-token" element={<LoginByTokenPage />} />
+      <Route path="/model/:modelId" element={<ModelViewPage />} />
 
       <Route element={<GeneralProtectedRoute />}>
         <Route path="/design" element={<EditorPage />} />
@@ -27,7 +33,6 @@ export default function AppRoutes() {
         <Route path="/models" element={<ModelsPage />} />
         <Route path="/instances" element={<InstancesPage />} />
         <Route path="/schedules" element={<SchedulesPage />} />
-        <Route path="/model/:modelId" element={<ModelViewPage />} />
         <Route path="/instance/:instanceId" element={<InstanceViewPage />} />
       </Route>
 

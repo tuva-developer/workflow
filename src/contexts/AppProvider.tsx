@@ -4,7 +4,8 @@ import { AppContext } from "@/contexts/AppContext";
 
 export const AppProvider = ({ children }: { children: ReactNode }) => {
   const [debugData, setDebugData] = useState<unknown>(null);
-  const [templateSelected, setTemplateSelected] = useState<Template>(defaultTemplate);
+  const [templateSelected, setTemplateSelected] =
+    useState<Template>(defaultTemplate);
   const [confirmDialog, setConfirmDialog] = useState<Confirm>(defaultConfirm);
   const [recentModels, setRecentModels] = useState<ModelSummary[]>([]);
   const [isLoading, setIsLoading] = useState<boolean>(false);
@@ -16,10 +17,19 @@ export const AppProvider = ({ children }: { children: ReactNode }) => {
     }
   }, []);
 
-  const addRecentModel = useCallback((m: {id: string; name: string}) => {
-    setRecentModels(prev => {
-      if (prev.some(x => x.id === m.id)) return prev;
-      return [m, ...prev].slice(0, 10);
+  const addRecentModel = useCallback((m: { id: string; name: string }) => {
+    setRecentModels((prev) => {
+      const filtered = prev.filter((x) => x.id !== m.id);
+
+      const newList = [m, ...filtered].slice(0, 10);
+
+      try {
+        localStorage.setItem("recentModels", JSON.stringify(newList));
+      } catch (err) {
+        console.error("Failed to save recent models:", err);
+      }
+
+      return newList;
     });
   }, []);
 

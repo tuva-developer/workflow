@@ -164,10 +164,10 @@ export function FormData(props: Props) {
       <button
         class="bio-properties-panel-button"
         onClick=${handleSetInput}
-        title="Set input"
+        title=${translate("Set data input")}
         disabled=${disabled}
       >
-        <i class="ri-settings-4-line"></i>
+        <i class="ri-settings-4-line" style="font-size:16px;"></i>
       </button>
     </div>
 
@@ -175,7 +175,7 @@ export function FormData(props: Props) {
       <div class="form-preview">
         <div class="form-preview-header">
           <h2>${formName}</h2>
-          <a onClick=${() => setIsOpen(false)}><i class="ri-close-large-line"></i></a>
+          <a onClick=${() => setIsOpen(false)}><i class="ri-close-line"></i></a>
         </div>
         <div class="form-preview-content">
           <div ref=${containerRef}></div>

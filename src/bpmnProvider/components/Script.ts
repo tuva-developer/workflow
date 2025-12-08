@@ -1,102 +1,42 @@
-import { html } from 'htm/preact';
-import { useEffect, useState, useRef } from '@bpmn-io/properties-panel/preact/hooks';
-import { useService } from 'bpmn-js-properties-panel';
+import { html } from "htm/preact";
 import {
-  getBusinessObject
-} from 'bpmn-js/lib/util/ModelUtil';
-import { getTheme } from '@/global/appState';
+  useEffect,
+  useState,
+  useRef,
+} from "@bpmn-io/properties-panel/preact/hooks";
+import { useService } from "bpmn-js-properties-panel";
+import { getBusinessObject } from "bpmn-js/lib/util/ModelUtil";
+import { getTheme } from "@/global/appState";
 
-import ace from 'ace-builds/src-noconflict/ace';
-ace.config.set('basePath', '/node_modules/ace-builds/src-noconflict');
-ace.config.setModuleUrl('ace/mode/javascript_worker', `${import.meta.env.BASE_URL}ace/worker-javascript.js`);
+import ace from "ace-builds/src-noconflict/ace";
+ace.config.set("basePath", "/node_modules/ace-builds/src-noconflict");
+ace.config.setModuleUrl(
+  "ace/mode/javascript_worker",
+  `${import.meta.env.BASE_URL}ace/worker-javascript.js`
+);
 
-import 'ace-builds/src-noconflict/mode-javascript';
-import 'ace-builds/src-noconflict/mode-php';
-import 'ace-builds/src-noconflict/mode-c_cpp';
-import 'ace-builds/src-noconflict/theme-monokai';
-import 'ace-builds/src-noconflict/theme-chrome';
-import 'ace-builds/src-noconflict/ext-language_tools';
-import 'ace-builds/src-noconflict/ext-searchbox';
-import 'ace-builds/src-noconflict/worker-javascript';
+import "ace-builds/src-noconflict/mode-javascript";
+import "ace-builds/src-noconflict/mode-php";
+import "ace-builds/src-noconflict/mode-c_cpp";
+import "ace-builds/src-noconflict/theme-monokai";
+import "ace-builds/src-noconflict/theme-chrome";
+import "ace-builds/src-noconflict/ext-language_tools";
+import "ace-builds/src-noconflict/ext-searchbox";
+import "ace-builds/src-noconflict/worker-javascript";
 import "ace-builds/src-noconflict/ext-beautify";
-
-const METHODS = {
-  console: ["log", "error"],
-  activity: [
-    "constructor", "getInput", "setStatus", "disableInvoke",
-    "getInputCollection", "getOutput", "setOutput",
-    "importForm", "getProcess", "setCollectionValue",
-    "setData", "getData"
-  ],
-  engine: [
-    "log", "error", "getInput", "getOutput", "getInputCollection",
-    "getProcess", "getActivity", "getGlobalData", "addGlobalData",
-    "addResultData", "getBinaryData", "fetch", "getUploadFileList",
-    "getFileData", "getFileDataStr", "createBuffer", "getBuffer",
-    "getFormDataKV"
-  ],
-  blob: ["constructor", "toString"],
-  formData: [
-    "constructor", "append", "entries", "toString",
-    "generateMultipartBody"
-  ]
-};
-
-const buildSuggestions = () => {
-  const suggestions: unknown[] = [];
-
-  for (const [obj, methods] of Object.entries(METHODS)) {
-    for (const method of methods) {
-      suggestions.push({
-        caption: `${obj}.${method}()`,
-        value: `${obj}.${method}()`,
-        meta: "function"
-      });
-      suggestions.push({
-        caption: `${method}()`,
-        value: `${method}()`,
-        meta: "function"
-      });
-    }
-  }
-
-  // Timer snippets
-  suggestions.push(
-    {
-      caption: "setTimeout = (cb, ms)",
-      value: "setTimeout = (cb, ms) => timer(ms, 0, cb, wfscriptid)",
-      meta: "snippet"
-    },
-    {
-      caption: "setInterval = (cb, ms)",
-      value: "setInterval = (cb, ms) => timer(0, ms, cb, wfscriptid)",
-      meta: "snippet"
-    }
-  );
-
-  // Others
-  suggestions.push(
-    { caption: "isRealValue()", value: "isRealValue()", meta: "function" },
-    { caption: "fetch()", value: "fetch()", meta: "function" }
-  );
-
-  return suggestions;
-};
-
-const customCompleter = {
-  getCompletions: (_editor, _session, _pos, _prefix, callback) =>
-    callback(null, buildSuggestions()),
-};
-
-ace.require('ace/ext/language_tools').addCompleter(customCompleter);
+import {
+  addGlobalCompleter,
+  setFunctionSuggestions,
+} from "@/bpmnProvider/utils/suggestionHub";
+import { readFunctionsFromCollaboration } from "@/bpmnProvider/utils/defines";
 
 export function Script(props) {
   const { element, id, disabled } = props;
   const theme = getTheme();
 
-  const bpmnFactory = useService('bpmnFactory');
-  const eventBus = useService('eventBus');
-  const translate = useService('translate');
+  const bpmnFactory = useService("bpmnFactory");
+  const eventBus = useService("eventBus");
+  const translate = useService("translate");
 
   const editorRef = useRef<HTMLDivElement | null>(null);
   const aceEditor = useRef<ReturnType<typeof ace.edit> | null>(null);
@@ -113,14 +53,14 @@ export function Script(props) {
 
   function getAceMode(scriptFormat) {
     switch (scriptFormat) {
-      case 'JavaScript':
-        return 'ace/mode/javascript';
-      case 'PHP':
-        return 'ace/mode/php';
-      case 'C++':
-        return 'ace/mode/c_cpp';
+      case "JavaScript":
+        return "ace/mode/javascript";
+      case "PHP":
+        return "ace/mode/php";
+      case "C++":
+        return "ace/mode/c_cpp";
       default:
-        return 'ace/mode/text';
+        return "ace/mode/text";
     }
   }
 
@@ -129,6 +69,7 @@ export function Script(props) {
 
     const businessObject = getBusinessObject(element);
 
+    addGlobalCompleter(ace);
     const editor = ace.edit(editorRef.current);
     aceEditor.current = editor;
 
@@ -136,7 +77,7 @@ export function Script(props) {
       enableBasicAutocompletion: true,
       enableLiveAutocompletion: true,
       enableSnippets: true,
-      showPrintMargin: false
+      showPrintMargin: false,
     });
 
     const beautify = ace.require("ace/ext/beautify");
@@ -150,42 +91,52 @@ export function Script(props) {
     });
 
     const scriptElement = businessObject.extensionElements?.values.find(
-      (v) => v.$type === 'customExtension:Script'
+      (v) => v.$type === "customExtension:Script"
     );
-    const script = decodeHTMLEntities(scriptElement?.value || '');
+    const script = decodeHTMLEntities(scriptElement?.value || "");
     editor.setValue(script, -1);
     editor.setReadOnly(disabled);
 
     const scriptFormatElement = businessObject.extensionElements?.values.find(
-      (v) => v.$type === 'customExtension:ScriptFormat'
+      (v) => v.$type === "customExtension:ScriptFormat"
     );
-    const scriptFormat = scriptFormatElement?.value || '';
+    const scriptFormat = scriptFormatElement?.value || "";
     const mode = getAceMode(scriptFormat);
 
     editor.getSession().setMode(mode);
-    editor.getSession().setUseWorker(scriptFormat === 'JavaScript');
+    editor.getSession().setUseWorker(scriptFormat === "JavaScript");
 
-    editor.on('change', () => {
+    editor.on("change", () => {
       const value = editor.getValue();
       const businessObject = getBusinessObject(element);
 
       if (!businessObject.extensionElements) {
-        businessObject.extensionElements = bpmnFactory.create('bpmn:ExtensionElements', {
-          values: []
-        });
+        businessObject.extensionElements = bpmnFactory.create(
+          "bpmn:ExtensionElements",
+          {
+            values: [],
+          }
+        );
       }
 
       let scriptElement = businessObject.extensionElements.values.find(
-        (v) => v.$type === 'customExtension:Script'
+        (v) => v.$type === "customExtension:Script"
       );
 
       if (!scriptElement) {
-        scriptElement = bpmnFactory.create('customExtension:Script', { value });
+        scriptElement = bpmnFactory.create("customExtension:Script", { value });
         businessObject.extensionElements.values.push(scriptElement);
       } else {
         scriptElement.value = value;
       }
     });
+
+    try {
+      const initList = readFunctionsFromCollaboration(element);
+      setFunctionSuggestions(initList);
+    } catch (e) {
+      console.error("Error:", e);
+    }
 
     return () => {
       editor.destroy();
@@ -196,22 +147,24 @@ export function Script(props) {
     if (!aceEditor.current) return;
 
     aceEditor.current.setTheme(
-      theme === 'light' ? 'ace/theme/chrome' : 'ace/theme/monokai'
+      theme === "light" ? "ace/theme/chrome" : "ace/theme/monokai"
     );
   }, [theme, element]);
 
   useEffect(() => {
     const businessObject = getBusinessObject(element);
     const scriptFormatElement = businessObject.extensionElements?.values.find(
-      (v) => v.$type === 'customExtension:ScriptFormat'
+      (v) => v.$type === "customExtension:ScriptFormat"
     );
-    const scriptFormat = scriptFormatElement?.value || '';
+    const scriptFormat = scriptFormatElement?.value || "";
 
     const mode = getAceMode(scriptFormat);
 
     if (aceEditor.current) {
       aceEditor.current.getSession().setMode(mode);
-      aceEditor.current.getSession().setUseWorker(scriptFormat === 'JavaScript');
+      aceEditor.current
+        .getSession()
+        .setUseWorker(scriptFormat === "JavaScript");
     }
   }, [element]);
 
@@ -220,29 +173,48 @@ export function Script(props) {
   }
 
   const handleKeyDown = (event) => {
-    if (event.key === 'Escape') {
+    if (event.key === "Escape") {
       handleFullScreen();
     }
 
-    if (event.ctrlKey && event.key === 's') {
+    if (event.ctrlKey && event.key === "s") {
       event.preventDefault();
       event.stopPropagation();
 
-      eventBus.fire('updateModel');
+      eventBus.fire("updateModel");
     }
   };
 
+  useEffect(() => {
+    if (!eventBus || !element) return;
+
+    const onToggle = () => {
+      setIsFullscreen(true);
+    };
+
+    eventBus.on("scriptEditor.toggle", onToggle);
+    return () => eventBus.off("scriptEditor.toggle", onToggle);
+  }, [eventBus, element]);
+
   return html`
-    <div class=${`script-editor ${isFullscreen ? 'full-screen' : ''}`}>
+    <div class=${`script-editor ${isFullscreen ? "full-screen" : ""}`}>
       <a onClick=${handleFullScreen}>
-        ${isFullscreen ? html`<i class="ri-close-line"></i>` : html`<i class="ri-fullscreen-line"></i>`}
+        ${isFullscreen
+          ? html`<i class="ri-close-line"></i>`
+          : html`<i class="ri-fullscreen-line"></i>`}
       </a>
       <div id=${id} ref=${editorRef} onKeyDown=${handleKeyDown}></div>
       <div class="bio-properties-panel-description">
-        <p style="font-size: 12px; margin: 6px 0 0 0">${translate("Shortcuts")}:</p>
+        <p style="font-size: 12px; margin: 6px 0 0 0">
+          ${translate("Shortcuts")}:
+        </p>
         <ul>
-          <li style="font-size: 11px; list-style-type: circle;">${translate("(Ctrl + Shift + F) to format code")}</li>
-          <li style="font-size: 11px; list-style-type: circle;">${translate("(Ctrl + S) to save")}</li>
+          <li style="font-size: 11px; list-style-type: circle;">
+            ${translate("(Ctrl + Shift + F) to format code")}
+          </li>
+          <li style="font-size: 11px; list-style-type: circle;">
+            ${translate("(Ctrl + S) to save")}
+          </li>
         </ul>
       </div>
     </div>

@@ -11,7 +11,7 @@ import { useEffect, useMemo, useState } from "react";
 import RunModelDialog from "@/components/dialogs/RunModelDlg";
 import UpdateModelPermissions from "@/components/dialogs/UpdateModelPermissionDlg";
 import { showWarn } from "@/utils/toastConfig";
-import { defaultModel, formatDate } from "@/utils/defines";
+import { defaultModel } from "@/utils/defines";
 import { MdEdit, MdRebaseEdit } from "react-icons/md";
 import { IoPlay } from "react-icons/io5";
 import { FaUserLock } from "react-icons/fa";
@@ -34,6 +34,7 @@ import SelectModelType from "@/components/common/SelectModelType";
 import { useModelCategoriesQuery } from "@/hooks/query/useModelCategoriesQuery";
 import { useModelTypesQuery } from "@/hooks/query/useModelTypesQuery";
 import UpdateModelDialog from "@/components/dialogs/UpdateModelDlg";
+import { DateCell } from "@/components/common/DateCell";
 
 type Role = "edit" | "execute";
 type PermissionData = {
@@ -222,32 +223,55 @@ function MyModelTable() {
       field: "categoryId",
       headerName: t("Category"),
       flex: 1,
-      renderCell: (p) =>
-        modelCategories.find((c) => c._id === p.row.categoryId)?.name ??
-        t("null"),
+      renderCell: (p) => {
+        const categoryName =
+          modelCategories.find((c) => c._id === p.row.categoryId)?.name ?? null;
+        if (!categoryName)
+          return (
+            <span
+              style={{
+                fontStyle: "italic",
+                color: theme.palette.text.secondary,
+              }}
+            >
+              {t("No data")}
+            </span>
+          );
+        return <span>{categoryName}</span>;
+      },
     },
     {
       field: "typeId",
       headerName: t("Type"),
       flex: 1,
-      renderCell: (p) =>
-        modelTypes.find((tt) => tt._id === p.row.typeId)?.name ?? t("null"),
+      renderCell: (p) => {
+        const typeName =
+          modelTypes.find((c) => c._id === p.row.typeId)?.name ?? null;
+        if (!typeName)
+          return (
+            <span
+              style={{
+                fontStyle: "italic",
+                color: theme.palette.text.secondary,
+              }}
+            >
+              {t("No data")}
+            </span>
+          );
+        return <span>{typeName}</span>;
+      },
     },
     {
       field: "created_at",
       headerName: t("Created at"),
       flex: 1,
-      renderCell: (p: GridRenderCellParams<Model, string>) => (
-        <span>{formatDate(p.row.created_at)}</span>
-      ),
+      renderCell: (params) => <DateCell value={params.value} />,
     },
     {
       field: "updated_at",
       headerName: t("Updated at"),
       flex: 1,
-      renderCell: (p: GridRenderCellParams<Model, string>) => (
-        <span>{formatDate(p.row.updated_at)}</span>
-      ),
+      renderCell: (params) => <DateCell value={params.value} />,
     },
     {
       field: "action",

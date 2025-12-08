@@ -3,7 +3,7 @@ import { Box, Typography, useTheme } from "@mui/material";
 import { useEffect, useState } from "react";
 import { useTranslation } from "react-i18next";
 
-type DebugEntry = { error?: unknown; log?: unknown };
+type DebugEntry = { level?: "error" | "console"; log?: unknown };
 
 const isDebugEntry = (v: unknown): v is DebugEntry =>
   typeof v === "object" && v !== null && ("error" in v || "log" in v);
@@ -43,33 +43,60 @@ const DebugView = () => {
         width: "100%",
         height: "100%",
         overflow: "auto",
-        p: "10px 20px",
       }}
     >
       {debugDataChecked.length > 0 ? (
         debugDataChecked.map((item, index) => {
-          const isErr = Boolean(item.error);
-          const text = toText(item.error ?? item.log);
+          const isErr = Boolean(item.level === "error");
+          const text = toText(item.log);
 
           return (
             <Typography
               key={index}
               sx={{
-                color: isErr ? theme.palette.error.main : theme.palette.success.main,
+                display: "flex",
+                alignItems: "flex-start",
+                gap: 1,
+                fontSize: 14,
                 wordBreak: "break-word",
-                fontSize: "14px",
+                color: isErr
+                  ? theme.palette.error.main
+                  : theme.palette.success.main,
+                mb: 0.5,
               }}
             >
-              <span style={{ color: theme.palette.text.secondary }}>{index + 1}</span>
-              <span
-                style={{
+              <Box
+                component="span"
+                sx={{
+                  display: "inline-block",
+                  width: 32,
+                  textAlign: "right",
+                  mr: 1,
+                  pr: 1,
+                  borderRight: `1px solid ${theme.palette.divider}`,
                   color: theme.palette.text.secondary,
-                  padding: "0 20px 0 10px",
+                  userSelect: "none",
+                  opacity: 0.8,
+                  fontSize: 13,
                 }}
               >
-                |
-              </span>
-              {text}
+                {index + 1}
+              </Box>
+
+              <Box
+                component="span"
+                sx={{
+                  display: "inline-block",
+                  width: 72,
+                  textAlign: "left",
+                }}
+              >
+                {`[${item.level}]: `}
+              </Box>
+
+              <Box component="span" sx={{ flex: 1 }}>
+                {`${text}`}
+              </Box>
             </Typography>
           );
         })

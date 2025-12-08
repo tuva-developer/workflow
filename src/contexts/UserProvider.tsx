@@ -1,4 +1,3 @@
-// contexts/UserProvider.tsx
 import React, { useState } from "react";
 import { UserContext } from "@/contexts/UserContext";
 import { Permission } from "@/types/enums";

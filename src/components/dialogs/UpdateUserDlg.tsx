@@ -30,8 +30,8 @@ export type UpdateUserDialogProps = {
 
 const makeDefaults = (u?: User) => ({
   userId: u?.userId ?? "",
-  username: u?.username ?? "",
-  password: "",
+  tenantId: u?.tenantId ?? "",
+  new_password: "",
   fullname: u?.fullname ?? "",
   email: u?.email ?? "",
   phone: u?.phone ?? "",
@@ -41,8 +41,8 @@ const makeDefaults = (u?: User) => ({
 const makeSchema = (t: (k: string) => string) =>
   z.object({
     userId: z.string().min(1),
-    username: z.string().trim().min(1, t("Username is required")),
-    password: z.union([
+    tenantId: z.string().min(1),
+    new_password: z.union([
       z.literal(""),
       z.string().min(6, t("Password must be at least 6 characters")),
     ]),
@@ -145,21 +145,25 @@ const UpdateUserDialog: React.FC<UpdateUserDialogProps> = ({
             label={t("Username")}
             size="small"
             fullWidth
-            {...register("username")}
-            error={!!errors.username}
-            helperText={errors.username?.message}
-            autoFocus
-            autoComplete="off"
+            {...register("userId")}
+            error={!!errors.userId}
+            helperText={errors.userId?.message}
+            InputProps={{
+              readOnly: true,
+            }}
+            sx={{
+              pointerEvents: "none",
+            }}
           />
 
           <TextField
-            label={t("Password")}
+            label={t("New password")}
             type="password"
             size="small"
             fullWidth
-            {...register("password")}
-            error={!!errors.password}
-            helperText={errors.password?.message}
+            {...register("new_password")}
+            error={!!errors.new_password}
+            helperText={errors.new_password?.message}
             autoComplete="new-password"
           />
 
@@ -209,11 +213,7 @@ const UpdateUserDialog: React.FC<UpdateUserDialogProps> = ({
         >
           {t("Update")}
         </Button>
-        <Button
-          onClick={handleClose}
-          className="red"
-          disabled={isSubmitting}
-        >
+        <Button onClick={handleClose} className="red" disabled={isSubmitting}>
           {t("Cancel")}
         </Button>
       </DialogActions>

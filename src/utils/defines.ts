@@ -35,13 +35,13 @@ export const formatDate = (s?: string) => {
   return isNaN(d.getTime()) ? "" : d.toLocaleString();
 }
 
-export function getRuntimeConfig() {
-  const cfg: { API_BASE_URL?: string; SECURE_FLAG?: boolean; MOCK_MODE?: boolean } = window.VBD_WORKFLOW_CONFIG ?? {};
+export function getRuntimeConfig(): RuntimeConfig {
+  const cfg = window.VBD_WORKFLOW_CONFIG ?? {};
   return {
     API_BASE_URL: cfg.API_BASE_URL ?? '/api',
     SECURE_FLAG: cfg.SECURE_FLAG ?? false,
-    MOCK_MODE: cfg.MOCK_MODE ?? false,
-  } as const;
+    VERSION: cfg.VERSION ?? '',
+  };
 }
 
 export const RoleColors: Record<"light" | "dark", Record<string, string>> = { light: { User: "#3f5c78", Editor: "#a15c00", Executor: "#2f6f4f", Admin: "#8a2e2e", Invoker: "#5c6e2f", SuperAdmin: "#553c9a", }, dark: { User: "#60A5FA", Editor: "#F59E0B", Executor: "#34D399", Admin: "#F87171", Invoker: "#A3E635", SuperAdmin: "#C084FC", }, };
@@ -49,7 +49,7 @@ export const RoleColors: Record<"light" | "dark", Record<string, string>> = { li
 export const defaultUser: User = {
   userId: '',
   roles: [],
-  joined_at: '',
+  created_at: '',
   updated_at: '',
   permissions: [],
   tenantId: '',
@@ -119,14 +119,14 @@ export const defaultInstance: Instance = {
 
 export const defaultTask: Task = {
   activityId: '',
+  name: '',
   processId: '',
   index: 0,
-  assigneeType: '',
   status: '',
   form: '',
   formName: '',
-  assigneeId: '',
   instanceId: '',
+  modelId: '',
   taskId: '',
   created_at: '',
   updated_at: '',

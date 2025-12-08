@@ -30,7 +30,7 @@ import "react-date-range/dist/theme/default.css";
 
 import CustomTranslateProvider, {
   setLanguage,
-} from "@/bpmnProvider/CustomTranslateProvider.js";
+} from "@/bpmnProvider/provider/CustomTranslate.js";
 import ModelListDialog from "@/components/dialogs/ModelListDlg";
 import InstanceListDialog from "@/components/dialogs/InstanceListDlg";
 import CreateModelDialog from "@/components/dialogs/CreateModelDlg";
@@ -47,10 +47,10 @@ import { useLanguage } from "@/hooks/useLanguage";
 import { useTranslation } from "react-i18next";
 import BottomToolbar from "@/components/layout/BottomToolbar";
 import CopyableModelName from "@/components/common/CopyableModelName";
-import { defaultModel } from "@/utils/defines";
+import { defaultModel, defaultTemplate } from "@/utils/defines";
 import { setReadonlyMode } from "@/global/appState";
 import { loadTemplate } from "@/bpmnProvider/utils/defines";
-import { showError, showWarn } from "@/utils/toastConfig";
+import { showError, showSuccess, showWarn } from "@/utils/toastConfig";
 import { loadModelData } from "@/services/models";
 import {
   useDeleteModel,
@@ -149,6 +149,7 @@ export default function BpmnEditor({
     openConfirm,
     closeConfirm,
     addRecentModel,
+    setTemplateSelected,
   } = useAppContext();
 
   const modelerContainerRef = useRef<HTMLDivElement | null>(null);
@@ -422,7 +423,6 @@ export default function BpmnEditor({
 
     eventBus.fire("updateModeler", { modeler: m });
 
-    setLanguage(language);
     refreshBpmnUI();
 
     return () => {
@@ -440,14 +440,11 @@ export default function BpmnEditor({
         didInitialFitRef.current = false;
       }
     };
-  }, [
-    fitViewportMinus,
-    getCanvas,
-    getEventBus,
-    language,
-    refetch,
-    refreshBpmnUI,
-  ]);
+  }, [fitViewportMinus, getCanvas, getEventBus, refetch, refreshBpmnUI]);
+
+  useEffect(() => {
+    setLanguage(language);
+  }, [language]);
 
   useEffect(() => {
     if (!modelId) return;
@@ -491,20 +488,23 @@ export default function BpmnEditor({
   }, [propertiesContainerRef]);
 
   useEffect(() => {
-    if (!templateSelected._id || !modeler.current) return;
+    if (!templateSelected || !templateSelected._id || !modeler.current) return;
 
     async function load() {
       const result = await loadTemplate(templateSelected, modeler.current!);
-      if (!result?.success) {
-        const isDuplicateId = result?.error?.includes("Duplicate ID");
-        isDuplicateId
-          ? showWarn(t("Import failed due to duplicate ID"))
-          : showWarn(t("Import template failed"));
+      if (result.success) {
+        showSuccess(t("Import template successfully"));
+      } else {
+        showWarn(t("Import template failed"));
       }
     }
 
     load();
-  }, [templateSelected._id, t, templateSelected]);
+
+    return () => {
+      setTemplateSelected(defaultTemplate);
+    };
+  }, [templateSelected, t, setTemplateSelected]);
 
   useEffect(() => {
     if (!modeler.current) return;
@@ -564,8 +564,10 @@ export default function BpmnEditor({
   }, [getEventBus, handleUpdate]);
 
   useEffect(() => {
+    if (currentModel._id === "") return;
+
     addRecentModel({ id: currentModel._id, name: currentModel.name });
-  }, [currentModel, addRecentModel]);
+  }, [currentModel._id, currentModel.name, addRecentModel]);
 
   function handleModelList() {
     setIsModelListDialogOpen(true);
@@ -921,7 +923,7 @@ export default function BpmnEditor({
             </ToolbarButton>
           </Tooltip>
 
-          {!isLimit && <CopyableModelName name={currentModel.name} />}
+          {!isLimit && <CopyableModelName model={currentModel} />}
         </Box>
 
         <Box ref={propertiesContainerRef} />
@@ -952,6 +954,7 @@ export default function BpmnEditor({
         isOpen={isExportModelDialogOpen}
         onClose={() => setIsExportModelDialogOpen(false)}
         modelXML={modelXML}
+        modelName={currentModel.name}
       />
 
       <ImportModelDialog

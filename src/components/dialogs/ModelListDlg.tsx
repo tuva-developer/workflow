@@ -16,8 +16,9 @@ import {
   Typography,
   Card,
   useTheme,
+  Tooltip,
 } from "@mui/material";
-import { AiOutlineDelete } from "react-icons/ai";
+import { AiOutlineDelete, AiOutlineInfo } from "react-icons/ai";
 import { TfiExport } from "react-icons/tfi";
 import BpmnViewer from "bpmn-js/lib/Viewer";
 import MoveCanvasModule from "diagram-js/lib/navigation/movecanvas";
@@ -25,10 +26,10 @@ import ZoomScrollModule from "diagram-js/lib/navigation/zoomscroll";
 import { FixedSizeList as List } from "react-window";
 import ExportModelDialog from "@/components/dialogs/ExportModelDlg";
 import { dialogStyles } from "@/styles/styles";
-import CustomRendererProvider from "@/bpmnProvider/CustomRendererProvider.js";
+import CustomRenderer from "@/bpmnProvider/provider/CustomRenderer.js";
 import { useTranslation } from "react-i18next";
 import SearchTextField from "@/components/common/SearchTextField";
-import { defaultModel } from "@/utils/defines";
+import { defaultModel, formatDate } from "@/utils/defines";
 import { useAppContext } from "@/hooks/useAppContext";
 import { showWarn } from "@/utils/toastConfig";
 import UpdateModelDialog from "@/components/dialogs/UpdateModelDlg";
@@ -47,6 +48,7 @@ import { useModelCategoriesQuery } from "@/hooks/query/useModelCategoriesQuery";
 import { useModelTypesQuery } from "@/hooks/query/useModelTypesQuery";
 import AutoSizer from "react-virtualized-auto-sizer";
 import { ModelQuery } from "@/services/types";
+import { loadModelData } from "@/services/models";
 
 interface ModelListDialogProps {
   isOpen: boolean;
@@ -65,7 +67,7 @@ const Item = ({ data, index, style }) => {
 
   const clickTimeout = useRef<number | null>(null);
 
-  const handleOnClick = async () => {
+  const handleOnClick = () => {
     if (clickTimeout.current) return;
 
     clickTimeout.current = window.setTimeout(() => {
@@ -78,7 +80,7 @@ const Item = ({ data, index, style }) => {
     }, 200);
   };
 
-  const handleOnDoubleClick = async () => {
+  const handleOnDoubleClick = () => {
     if (clickTimeout.current) {
       clearTimeout(clickTimeout.current);
       clickTimeout.current = null;
@@ -93,9 +95,192 @@ const Item = ({ data, index, style }) => {
 
   const handleOnKeyDown = (e) => {
     if (e.key === "Enter") {
-      data.handleKeyDown(data.modelViewSelected);
+      try {
+        data.handleKeyDown(model);
+      } catch (err) {
+        console.error("Error:", err);
+      }
     }
   };
+
+  const oneLineText = {
+    whiteSpace: "nowrap",
+    overflow: "hidden",
+    textOverflow: "ellipsis",
+    lineHeight: "16px",
+    display: "block",
+  };
+
+  const categoryName =
+    categories.find((cat) => cat._id === model.categoryId)?.name || t("N/A");
+  const typeName =
+    types.find((type) => type._id === model.typeId)?.name || t("N/A");
+
+  const detailTooltip = (
+    <Box sx={{ p: 1, fontSize: 12, maxWidth: 320 }}>
+      <Box sx={{ mb: 0.75, display: "flex", flexDirection: "row", gap: 1 }}>
+        <Box
+          sx={{
+            fontSize: 11,
+            color:
+              theme.palette.mode === "light"
+                ? theme.palette.grey[400]
+                : theme.palette.text.secondary,
+          }}
+        >
+          {t("ID")}:
+        </Box>
+        <Box
+          sx={{
+            fontSize: 12,
+            userSelect: "text",
+            wordBreak: "break-all",
+          }}
+        >
+          {model?._id || t("N/A")}
+        </Box>
+      </Box>
+
+      <Box sx={{ mb: 0.75, display: "flex", flexDirection: "row", gap: 1 }}>
+        <Box
+          sx={{
+            fontSize: 11,
+            color:
+              theme.palette.mode === "light"
+                ? theme.palette.grey[400]
+                : theme.palette.text.secondary,
+          }}
+        >
+          {t("Created at")}:
+        </Box>
+        <Box
+          sx={{
+            fontSize: 12,
+            userSelect: "text",
+            wordBreak: "break-all",
+          }}
+        >
+          {formatDate(model?.created_at)}
+        </Box>
+      </Box>
+
+      <Box sx={{ mb: 0.75, display: "flex", flexDirection: "row", gap: 1 }}>
+        <Box
+          sx={{
+            fontSize: 11,
+            color:
+              theme.palette.mode === "light"
+                ? theme.palette.grey[400]
+                : theme.palette.text.secondary,
+          }}
+        >
+          {t("Updated at")}:
+        </Box>
+        <Box
+          sx={{
+            fontSize: 12,
+            userSelect: "text",
+            wordBreak: "break-all",
+          }}
+        >
+          {formatDate(model?.updated_at)}
+        </Box>
+      </Box>
+
+      <Box sx={{ mb: 0.75, display: "flex", flexDirection: "row", gap: 1 }}>
+        <Box
+          sx={{
+            fontSize: 11,
+            color:
+              theme.palette.mode === "light"
+                ? theme.palette.grey[400]
+                : theme.palette.text.secondary,
+          }}
+        >
+          {t("Owner")}:
+        </Box>
+        <Box
+          sx={{
+            fontSize: 12,
+            userSelect: "text",
+            wordBreak: "break-all",
+          }}
+        >
+          {model?.owner || t("N/A")}
+        </Box>
+      </Box>
+
+      <Box sx={{ mb: 0.75, display: "flex", flexDirection: "row", gap: 1 }}>
+        <Box
+          sx={{
+            fontSize: 11,
+            color:
+              theme.palette.mode === "light"
+                ? theme.palette.grey[400]
+                : theme.palette.text.secondary,
+          }}
+        >
+          {t("Type")}:
+        </Box>
+        <Box
+          sx={{
+            fontSize: 12,
+            userSelect: "text",
+            wordBreak: "break-all",
+          }}
+        >
+          {typeName}
+        </Box>
+      </Box>
+
+      <Box sx={{ mb: 0.75, display: "flex", flexDirection: "row", gap: 1 }}>
+        <Box
+          sx={{
+            fontSize: 11,
+            color:
+              theme.palette.mode === "light"
+                ? theme.palette.grey[400]
+                : theme.palette.text.secondary,
+          }}
+        >
+          {t("Category")}:
+        </Box>
+        <Box
+          sx={{
+            fontSize: 12,
+            userSelect: "text",
+            wordBreak: "break-all",
+          }}
+        >
+          {categoryName}
+        </Box>
+      </Box>
+
+      <Box sx={{ display: "flex", flexDirection: "row", gap: 1 }}>
+        <Box
+          sx={{
+            fontSize: 11,
+            color:
+              theme.palette.mode === "light"
+                ? theme.palette.grey[400]
+                : theme.palette.text.secondary,
+          }}
+        >
+          {t("Description")}:
+        </Box>
+        <Box
+          sx={{
+            fontSize: 12,
+            userSelect: "text",
+            whiteSpace: "pre-wrap",
+            wordBreak: "break-word",
+          }}
+        >
+          {model?.description || t("N/A")}
+        </Box>
+      </Box>
+    </Box>
+  );
 
   return (
     <Box style={{ ...style, display: "flex", alignItems: "center" }}>
@@ -115,7 +300,7 @@ const Item = ({ data, index, style }) => {
               : "none",
           cursor: "pointer",
           borderRadius: 2,
-          padding: "8px 12px",
+          padding: "6px 10px",
           width: "100%",
           display: "flex",
           justifyContent: "space-between",
@@ -135,117 +320,108 @@ const Item = ({ data, index, style }) => {
         <Box sx={{ flex: 1, overflow: "hidden" }}>
           <Typography
             sx={{
+              ...oneLineText,
               fontSize: "14px",
               fontWeight: 500,
               color: theme.palette.primary.light,
-              overflow: "hidden",
-              textOverflow: "ellipsis",
-              whiteSpace: "nowrap",
-              mb: 0.5,
             }}
           >
             {model.name}
           </Typography>
-          <Box
-            sx={{
-              display: "flex",
-              flexDirection: "column",
-              flexWrap: "wrap",
-              gap: 0.5,
-              overflow: "hidden",
-              whiteSpace: "nowrap",
-            }}
-          >
-            <Typography
-              sx={{
-                fontSize: 12,
-                fontWeight: 400,
-                color: theme.palette.text.secondary,
-              }}
-            >
-              {t("Owner")}:{" "}
-              <Box component="span" sx={{ color: theme.palette.text.primary }}>
-                {model.owner}
-              </Box>
-            </Typography>
-
-            <Typography
-              sx={{
-                fontSize: 12,
-                fontWeight: 400,
-                color: theme.palette.text.secondary,
-              }}
-            >
-              {t("Category")}:{" "}
-              <Box component="span" sx={{ color: theme.palette.text.primary }}>
-                {categories.find((cat) => cat._id === model.categoryId)?.name ||
-                  t("N/A")}
-              </Box>
-            </Typography>
-
-            <Typography
-              sx={{
-                fontSize: 12,
-                fontWeight: 400,
-                color: theme.palette.text.secondary,
-              }}
-            >
-              {t("Type")}:{" "}
-              <Box component="span" sx={{ color: theme.palette.text.primary }}>
-                {types.find((type) => type._id === model.typeId)?.name ||
-                  t("N/A")}
-              </Box>
-            </Typography>
-          </Box>
         </Box>
 
-        {!selectOnly && (
+        <Box
+          sx={{
+            display: "flex",
+            alignItems: "center",
+            gap: 1,
+          }}
+        >
           <Box
             sx={{
               display: "flex",
-              gap: 1,
+              gap: 0.5,
               visibility: "hidden",
               ".MuiCard-root:hover &": {
                 visibility: "visible",
               },
             }}
           >
-            <IconButton
-              size="small"
-              sx={{
-                color: theme.palette.primary.main,
-                padding: 1,
-                "&:hover": {
-                  color: theme.palette.common.white,
-                  backgroundColor: theme.palette.primary.light,
-                },
-              }}
-              onClick={(e) => {
-                e.stopPropagation();
-                data.handelClickExport(model.config);
-              }}
-            >
-              <TfiExport size={16} />
-            </IconButton>
-            <IconButton
-              size="small"
-              sx={{
-                color: theme.palette.error.main,
-                padding: 1,
-                "&:hover": {
-                  color: theme.palette.common.white,
-                  backgroundColor: theme.palette.error.light,
-                },
-              }}
-              onClick={(e) => {
-                e.stopPropagation();
-                data.handleClickDelete(model._id);
-              }}
-            >
-              <AiOutlineDelete size={16} />
-            </IconButton>
+            <Tooltip title={detailTooltip}>
+              <IconButton
+                size="small"
+                sx={{
+                  width: 28,
+                  height: 28,
+                  borderRadius: "8px",
+                  color: theme.palette.success.main,
+                  transition: "all 0.15s",
+                  border: `1px solid ${theme.palette.success.main}33`,
+                  "&:hover": {
+                    backgroundColor: theme.palette.success.light,
+                    color: theme.palette.common.white,
+                    boxShadow: `0 0 4px ${theme.palette.success.main}80`,
+                  },
+                }}
+              >
+                <AiOutlineInfo size={16} />
+              </IconButton>
+            </Tooltip>
+            {!selectOnly && (
+              <>
+                <Tooltip title={t("Export")}>
+                  <IconButton
+                    size="small"
+                    sx={{
+                      width: 28,
+                      height: 28,
+                      borderRadius: "8px",
+                      color: theme.palette.primary.main,
+                      transition: "all 0.15s",
+                      border: `1px solid ${theme.palette.primary.main}33`,
+                      "&:hover": {
+                        backgroundColor: theme.palette.primary.light,
+                        color: theme.palette.common.white,
+                        boxShadow: `0 0 4px ${theme.palette.primary.main}80`,
+                      },
+                    }}
+                    onClick={(e) => {
+                      e.stopPropagation();
+                      data.handelClickExport(model);
+                    }}
+                  >
+                    <TfiExport size={16} />
+                  </IconButton>
+                </Tooltip>
+
+                <Tooltip title={t("Delete")}>
+                  <IconButton
+                    size="small"
+                    sx={{
+                      width: 28,
+                      height: 28,
+                      borderRadius: "8px",
+                      color: theme.palette.error.main,
+                      transition: "all 0.15s",
+                      border: `1px solid ${theme.palette.error.main}33`,
+                      "&:hover": {
+                        backgroundColor: theme.palette.error.light,
+                        color: theme.palette.common.white,
+                        boxShadow: `0 0 4px ${theme.palette.error.main}80`,
+                      },
+                    }}
+                    onClick={(e) => {
+                      e.stopPropagation();
+                      data.handleClickDelete(model._id);
+                    }}
+                  >
+                    <AiOutlineDelete size={16} />
+                  </IconButton>
+                </Tooltip>
+              </>
+            )}
           </Box>
-        )}
+        </Box>
       </Card>
     </Box>
   );
@@ -293,7 +469,7 @@ const ModelListDialog: React.FC<ModelListDialogProps> = ({
 
   const params: ModelQuery = useMemo(
     () => ({
-      hasConfig: true,
+      hasConfig: false,
       limit: rowsPerPage,
       page: page + 1,
       search: searchText || undefined,
@@ -330,6 +506,30 @@ const ModelListDialog: React.FC<ModelListDialogProps> = ({
 
   const updateModelMutation = useUpdateModel();
   const deleteModelMutation = useDeleteModel();
+
+  const ensureModelConfig = useCallback(
+    async (model: Model): Promise<Model | null> => {
+      try {
+        const xml = await loadModelData(model._id, true);
+
+        const mergedModel: Model = {
+          ...model,
+          config: xml,
+        };
+
+        setModelViewSelected((prev) =>
+          prev._id === model._id ? { ...prev, config: xml } : prev
+        );
+
+        return mergedModel;
+      } catch (err) {
+        console.error("Error loading model config:", err);
+        showWarn(t("Failed to load model config"));
+        return null;
+      }
+    },
+    [t]
+  );
 
   useEffect(() => {
     if (!isOpen) return;
@@ -386,7 +586,7 @@ const ModelListDialog: React.FC<ModelListDialogProps> = ({
         ZoomScrollModule,
         {
           __init__: ["customRendererProvider"],
-          customRendererProvider: ["type", CustomRendererProvider],
+          customRendererProvider: ["type", CustomRenderer],
         },
       ],
     });
@@ -406,38 +606,58 @@ const ModelListDialog: React.FC<ModelListDialogProps> = ({
 
   const handleClick = (model: Model) => {
     setModelViewSelected(model);
+    void ensureModelConfig(model);
   };
 
-  const handleDoubleClick = (model: Model) => {
-    setCurrentModel(model);
-    setModelViewSelected(model);
+  const handleDoubleClick = async (model: Model) => {
+    const fullModel = await ensureModelConfig(model);
+    if (!fullModel) return;
+
+    setCurrentModel(fullModel);
+    setModelViewSelected(fullModel);
     onClose();
   };
 
-  const handleKeyDown = (model: Model) => {
-    setCurrentModel(model);
-    setModelViewSelected(model);
+  const handleKeyDown = async (model: Model) => {
+    const fullModel = await ensureModelConfig(model);
+    if (!fullModel) return;
+
+    setCurrentModel(fullModel);
+    setModelViewSelected(fullModel);
     onClose();
   };
 
-  function handleClickSelect() {
-    if (modelViewSelected._id) {
-      setCurrentModel(modelViewSelected);
-      onClose();
-    } else {
+  async function handleClickSelect() {
+    if (!modelViewSelected._id) {
       showWarn(t("No model selected"));
-    }
-  }
-
-  function handelClickExport(modelConfig) {
-    if (modelViewSelected._id === "") {
-      showWarn(t("Model has not been selected"));
-
       return;
     }
 
-    setModelConfigToExport(modelConfig);
-    setIsExportModelDialogOpen(true);
+    const fullModel = await ensureModelConfig(modelViewSelected);
+    if (!fullModel) return;
+
+    setCurrentModel(fullModel);
+    onClose();
+  }
+
+  function handelClickExport(model?: Model) {
+    const target = model ?? modelViewSelected;
+
+    if (!target || !target._id) {
+      showWarn(t("Model has not been selected"));
+      return;
+    }
+
+    void (async () => {
+      const fullModel = await ensureModelConfig(target);
+      if (!fullModel?.config) {
+        showWarn(t("Model config is empty"));
+        return;
+      }
+
+      setModelConfigToExport(fullModel.config);
+      setIsExportModelDialogOpen(true);
+    })();
   }
 
   const handleClickDelete = useCallback(
@@ -608,7 +828,7 @@ const ModelListDialog: React.FC<ModelListDialogProps> = ({
                       height={height}
                       width={width}
                       itemCount={models.length}
-                      itemSize={110}
+                      itemSize={52}
                       itemData={{
                         items: models,
                         categories: modelCategories,
@@ -661,7 +881,7 @@ const ModelListDialog: React.FC<ModelListDialogProps> = ({
           </Button>
           {!selectOnly && (
             <>
-              <Button onClick={handelClickExport} className="blue">
+              <Button onClick={() => handelClickExport()} className="blue">
                 {t("Export")}
               </Button>
               <Button onClick={handleClickUpdate} className="blue">
@@ -670,6 +890,7 @@ const ModelListDialog: React.FC<ModelListDialogProps> = ({
               <Button
                 onClick={() => handleClickDelete(modelViewSelected._id)}
                 className="red"
+                disabled={!modelViewSelected._id}
               >
                 {t("Delete")}
               </Button>

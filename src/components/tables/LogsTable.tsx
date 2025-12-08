@@ -8,7 +8,7 @@ import CustomSelect from "@/components/common/CustomSelect";
 import LogMessageDialog from "@/components/dialogs/LogMessageDlg";
 import { GridColDef, GridRenderCellParams } from "@mui/x-data-grid";
 import GenericDataGrid from "@/components/common/GenericDataGrid";
-import { formatDate } from "@/utils/defines";
+import { DateCell } from "@/components/common/DateCell";
 
 interface LogsTableProps {
   logs: Log[];
@@ -98,14 +98,33 @@ function LogsTable({ logs }: LogsTableProps) {
 
   const columns: GridColDef<Log>[] = [
     { field: "activityId", headerName: t("Activity ID"), flex: 1 },
-    { field: "level", headerName: t("Level"), flex: 1 },
+    {
+      field: "level",
+      headerName: t("Level"),
+      flex: 0,
+      renderCell: (params) => (
+        <Box
+          sx={{
+            color:
+              params.value.toLowerCase() === "error"
+                ? theme.palette.error.main
+                : theme.palette.success.main,
+            backgroundColor:
+              params.value.toLowerCase() === "error"
+                ? `${theme.palette.error.main}33`
+                : `${theme.palette.success.main}33`,
+            textAlign: "center",
+          }}
+        >
+          {params.value}
+        </Box>
+      ),
+    },
     {
       field: "date",
       headerName: t("Date"),
       flex: 1,
-      renderCell: (params: GridRenderCellParams<Log, string>) => (
-        <>{formatDate(params.row.date)}</>
-      ),
+      renderCell: (params) => <DateCell value={params.value} />,
     },
     {
       field: "log",
@@ -113,7 +132,13 @@ function LogsTable({ logs }: LogsTableProps) {
       flex: 1,
       renderCell: (params: GridRenderCellParams<Log>) => (
         <Box
-          sx={{ cursor: "pointer", color: theme.palette.info.main }}
+          sx={{
+            cursor: "pointer",
+            color:
+              params.row.level.toLowerCase() === "error"
+                ? theme.palette.error.main
+                : theme.palette.success.main,
+          }}
           onClick={() => {
             handleClickLog(params.row.log);
           }}

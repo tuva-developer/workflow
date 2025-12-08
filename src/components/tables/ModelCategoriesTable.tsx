@@ -1,4 +1,4 @@
-import { defaultModelCategory, formatDate } from "@/utils/defines";
+import { defaultModelCategory } from "@/utils/defines";
 import { Box, Button, Toolbar, useTheme } from "@mui/material";
 import { ChangeEvent, useCallback, useMemo, useState } from "react";
 import { useTranslation } from "react-i18next";
@@ -14,6 +14,7 @@ import { useModelCategoriesQuery } from "@/hooks/query/useModelCategoriesQuery";
 import { GridColDef, GridRenderCellParams } from "@mui/x-data-grid";
 import GenericDataGrid from "@/components/common/GenericDataGrid";
 import { ModelCategoryQuery } from "@/services/types";
+import { DateCell } from "@/components/common/DateCell";
 
 function ModelCategoriesTable() {
   const theme = useTheme();
@@ -28,7 +29,8 @@ function ModelCategoriesTable() {
 
   const [isAddDialogOpen, setIsAddDialogOpen] = useState(false);
   const [isUpdateDialogOpen, setIsUpdateDialogOpen] = useState(false);
-  const [categoryToUpdate, setCategoryToUpdate] = useState<ModelCategory>(defaultModelCategory);
+  const [categoryToUpdate, setCategoryToUpdate] =
+    useState<ModelCategory>(defaultModelCategory);
 
   const params: ModelCategoryQuery = useMemo(
     () => ({
@@ -67,12 +69,16 @@ function ModelCategoriesTable() {
     setIsUpdateDialogOpen(true);
   }, []);
 
-  const handleChangePage = (_event: unknown, newPage: number) => setPage(newPage);
+  const handleChangePage = (_event: unknown, newPage: number) =>
+    setPage(newPage);
 
-  const handleChangeRowsPerPage = useCallback((e: ChangeEvent<HTMLInputElement>) => {
-    setRowsPerPage(parseInt(e.target.value, 10));
-    setPage(0);
-  }, []);
+  const handleChangeRowsPerPage = useCallback(
+    (e: ChangeEvent<HTMLInputElement>) => {
+      setRowsPerPage(parseInt(e.target.value, 10));
+      setPage(0);
+    },
+    []
+  );
 
   const handleChangeSort = (sortModelCategory) => {
     if (sortModelCategory.length > 0) {
@@ -93,17 +99,13 @@ function ModelCategoriesTable() {
       field: "created_at",
       headerName: t("Created at"),
       flex: 1,
-      renderCell: (params: GridRenderCellParams<ModelCategory, string>) => (
-        <>{formatDate(params.row.created_at)}</>
-      ),
+      renderCell: (params) => <DateCell value={params.value} />,
     },
     {
       field: "updated_at",
       headerName: t("Updated at"),
       flex: 1,
-      renderCell: (params: GridRenderCellParams<ModelCategory, string>) => (
-        <>{formatDate(params.row.updated_at)}</>
-      ),
+      renderCell: (params) => <DateCell value={params.value} />,
     },
     {
       field: "action",
@@ -167,7 +169,17 @@ function ModelCategoriesTable() {
         </Button>
       </Toolbar>
 
-      <Box sx={{ flex: 1, overflow: "hidden", display: "flex", flexDirection: "column", pl: 3, pr: 3, pb: 2 }}>
+      <Box
+        sx={{
+          flex: 1,
+          overflow: "hidden",
+          display: "flex",
+          flexDirection: "column",
+          pl: 3,
+          pr: 3,
+          pb: 2,
+        }}
+      >
         <GenericDataGrid<ModelCategory>
           rows={categories}
           columns={columns}

@@ -84,7 +84,7 @@ export type UserQuery = {
   search?: string;
   sortBy?: string;
   orderBy?: 'asc' | 'desc';
-  role?: string;
+  roles?: string;
 };
 
 export type PagedUsers = {
@@ -108,7 +108,7 @@ export type CreateUserInput = {
 
 export type UpdateUserInput = {
   userId: string;
-  username: string;
+  tenantId?: string;
   new_password?: string;
   fullname: string;
   email: string;
@@ -116,9 +116,9 @@ export type UpdateUserInput = {
   address: string;
 };
 
-export type DeleteUserInput = { userId: string };
+export type DeleteUserInput = { userId: string, tenantId: string };
 
-export type UpdateUserRoleInput = { userId: string; roles: string[] };
+export type UpdateUserRoleInput = { userId: string; tenantId:string, roles: UserRole[] };
 
 export type GroupQuery = {
   page?: number;
@@ -273,6 +273,7 @@ export type UpdateScheduleInput = {
   cron?: string,
   once?: boolean,
   active?: boolean,
+  data?: unknown,
 }
 
 export type DeleteScheduleInput = { scheduleId: string };
@@ -362,7 +363,27 @@ export type PagedTemplates = {
 
 export type AddTemplateInput = {
   name: string,
+  description?: string,
   config: unknown,
 };
 
 export type DeleteTemplateInput = { templateId: string };
+
+export interface RemoteFunction {
+  _id: string;
+  name: string;
+  description?: string;
+  script: string;
+  created_at?: string;
+  updated_at?: string;
+}
+
+export interface PagedRemoteFunctions {
+  items: RemoteFunction[];
+  total: number;
+  page: number;
+  limit: number;
+  totalPages: number;
+  hasNext: boolean;
+  hasPrev: boolean;
+}

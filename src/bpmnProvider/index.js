@@ -1,8 +1,9 @@
-import CustomPropertiesProvider from '@/bpmnProvider/CustomPropertiesProvider';
-import CustomContextPadProvider from '@/bpmnProvider/CustomContextPadProvider';
-import CustomRendererProvider from '@/bpmnProvider/CustomRendererProvider';
-import CustomPaletteProvider from '@/bpmnProvider/CustomPaletteProvider';
-import CustomReplaceMenuProvider from '@/bpmnProvider/CustomReplaceMenuProvider';
+import CustomPropertiesPanel from '@/bpmnProvider/provider/CustomPropertiesPanel';
+import CustomContextPad from '@/bpmnProvider/provider/CustomContextPad';
+import CustomRenderer from '@/bpmnProvider/provider/CustomRenderer';
+import CustomPalette from '@/bpmnProvider/provider/CustomPalette';
+import CustomReplaceMenu from '@/bpmnProvider/provider/CustomReplaceMenu';
+import AutoAssignWhenEmpty from '@/bpmnProvider/provider/AutoAssignWhenEmpty';
 
 export default {
   __init__: [
@@ -11,10 +12,12 @@ export default {
     'renderer',
     'paletteProvider',
     'replaceMenuProvider',
+    'autoAssignWhenEmpty',
   ],
-  propertiesProvider: ['type', CustomPropertiesProvider],
-  contextPadProvider: ['type', CustomContextPadProvider],
-  renderer: ['type', CustomRendererProvider],
-  paletteProvider: ['type', CustomPaletteProvider],
-  replaceMenuProvider: ['type', CustomReplaceMenuProvider],
+  propertiesProvider: ['type', CustomPropertiesPanel],
+  contextPadProvider: ['type', CustomContextPad],
+  renderer: ['type', CustomRenderer],
+  paletteProvider: ['type', CustomPalette],
+  replaceMenuProvider: ['type', CustomReplaceMenu],
+  autoAssignWhenEmpty: ['type', AutoAssignWhenEmpty]
 };

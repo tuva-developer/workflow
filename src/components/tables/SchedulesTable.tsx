@@ -17,9 +17,9 @@ import { useAppContext } from "@/hooks/useAppContext";
 import CustomTablePagination from "@/components/common/CustomTablePagination";
 import ButtonRefresh from "@/components/common/ButtonRefresh";
 import SelectUser from "@/components/common/SelectUser";
-import { MdAdd, MdDelete, MdDeleteOutline } from "react-icons/md";
+import { MdAdd, MdDelete, MdDeleteOutline, MdEdit } from "react-icons/md";
 import { showWarn } from "@/utils/toastConfig";
-import { defaultModel, formatDate } from "@/utils/defines";
+import { defaultModel } from "@/utils/defines";
 import { IoIosClose } from "react-icons/io";
 import ModelListDialog from "@/components/dialogs/ModelListDlg";
 import AddScheduleDialog from "@/components/dialogs/AddScheduleDlg";
@@ -33,6 +33,10 @@ import {
   useDeleteSchedule,
   useUpdateSchedule,
 } from "@/hooks/mutations/useScheduleMutations";
+import UpdateScheduleDialog from "@/components/dialogs/UpdateScheduleDlg";
+import { cronToText } from "@/utils/cron/cronToText";
+import i18n from "@/i18n";
+import { DateCell } from "@/components/common/DateCell";
 
 function SchedulesTable() {
   const theme = useTheme();
@@ -49,6 +53,11 @@ function SchedulesTable() {
   const [isOpenModelList, setIsOpenModelList] = useState(false);
   const [currentModel, setCurrentModel] = useState<Model>(defaultModel);
   const [isAddScheduleDialogOpen, setIsAddScheduleDialogOpen] = useState(false);
+  const [isUpdateScheduleDialogOpen, setIsUpdateScheduleDialogOpen] =
+    useState(false);
+  const [scheduleToUpdate, setScheduleToUpdate] = useState<Schedule | null>(
+    null
+  );
 
   const params: ScheduleQuery = useMemo(
     () => ({
@@ -99,6 +108,11 @@ function SchedulesTable() {
     }
 
     setIsAddScheduleDialogOpen(true);
+  }
+
+  function handleUpdateSchedule(schedule: Schedule) {
+    setScheduleToUpdate(schedule);
+    setIsUpdateScheduleDialogOpen(true);
   }
 
   const handleDeleteSchedule = useCallback(
@@ -174,17 +188,13 @@ function SchedulesTable() {
       field: "created_at",
       headerName: t("Created at"),
       flex: 1,
-      renderCell: (params: GridRenderCellParams<Schedule, string>) => (
-        <span>{formatDate(params.row.created_at)}</span>
-      ),
+      renderCell: (params) => <DateCell value={params.value} />,
     },
     {
       field: "updated_at",
       headerName: t("Updated at"),
       flex: 1,
-      renderCell: (params: GridRenderCellParams<Schedule, string>) => (
-        <span>{formatDate(params.row.updated_at)}</span>
-      ),
+      renderCell: (params) => <DateCell value={params.value} />,
     },
     {
       field: "active",
@@ -209,7 +219,20 @@ function SchedulesTable() {
         />
       ),
     },
-    { field: "cron", headerName: t("Cron"), flex: 1 },
+    {
+      field: "cron",
+      headerName: t("Cron"),
+      flex: 1,
+      renderCell: (params: GridRenderCellParams<Schedule>) => (
+        <Tooltip
+          title={cronToText(params.value, {
+            lang: i18n.language === "vi" ? "vi" : "en",
+          })}
+        >
+          <span>{params.value}</span>
+        </Tooltip>
+      ),
+    },
     {
       field: "action",
       headerName: t("Action"),
@@ -220,12 +243,29 @@ function SchedulesTable() {
       headerAlign: "center",
       headerClassName: "no-separator",
       renderCell: (params: GridRenderCellParams<Schedule>) => (
-        <ActionButton
-          icon={<MdDelete size={20} />}
-          color={theme.palette.error.main}
-          tooltip={t("Delete schedule")}
-          onClick={() => handleDeleteSchedule(params.row._id)}
-        />
+        <Box
+          sx={{
+            display: "flex",
+            gap: 1,
+            alignItems: "center",
+            justifyContent: "center",
+            height: "100%",
+            width: "100%",
+          }}
+        >
+          <ActionButton
+            icon={<MdEdit size={20} />}
+            color={theme.palette.primary.main}
+            tooltip={t("Edit")}
+            onClick={() => handleUpdateSchedule(params.row)}
+          />
+          <ActionButton
+            icon={<MdDelete size={20} />}
+            color={theme.palette.error.main}
+            tooltip={t("Delete schedule")}
+            onClick={() => handleDeleteSchedule(params.row._id)}
+          />
+        </Box>
       ),
     },
   ];
@@ -416,6 +456,13 @@ function SchedulesTable() {
         isOpen={isAddScheduleDialogOpen}
         onClose={() => setIsAddScheduleDialogOpen(false)}
         modelId={currentModel._id}
+        refreshData={handleRefreshData}
+      />
+
+      <UpdateScheduleDialog
+        isOpen={isUpdateScheduleDialogOpen}
+        onClose={() => setIsUpdateScheduleDialogOpen(false)}
+        schedule={scheduleToUpdate}
         refreshData={handleRefreshData}
       />
     </>

@@ -1,4 +1,4 @@
-import React, { useState } from "react";
+import React, { useEffect, useState } from "react";
 import {
   Dialog,
   DialogTitle,
@@ -18,16 +18,23 @@ interface ExportModelDialogProps {
   isOpen: boolean;
   onClose: () => void;
   modelXML: string;
+  modelName?: string;
 }
 
 const ExportModelDialog: React.FC<ExportModelDialogProps> = ({
   isOpen,
   onClose,
   modelXML,
+  modelName = "",
 }) => {
   const theme = useTheme();
   const [fileNameToExport, setFileNameToExport] = useState("");
   const { t } = useTranslation();
+
+  useEffect(() => {
+    setFileNameToExport(modelName);
+  }, [modelName]);
+
   const handleClickOk = async () => {
     if (!fileNameToExport) {
       showWarn(t("Please enter file name"));
@@ -62,6 +69,7 @@ const ExportModelDialog: React.FC<ExportModelDialogProps> = ({
       <DialogContent sx={{ display: "flex", alignItems: "baseline" }}>
         <TextField
           autoFocus
+          value={fileNameToExport}
           margin="dense"
           label={t("Filename")}
           type="text"

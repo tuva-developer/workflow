@@ -198,11 +198,11 @@ const ModelSchedulesDialog: React.FC<ModelSchedulesDialogProps> = ({
                           >
                             <Typography variant="caption">
                               {t("Created at")}:{" "}
-                              {formatDate(schedule.created_at)}
+                              {formatDate(schedule.created_at) || "—"}
                             </Typography>
                             <Typography variant="caption">
                               {t("Updated at")}:{" "}
-                              {formatDate(schedule.updated_at)}
+                              {formatDate(schedule.updated_at) || "—"}
                             </Typography>
                             <Typography variant="caption">
                               {t("Creator")}: {schedule.creator || "—"}

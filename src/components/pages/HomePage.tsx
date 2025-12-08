@@ -11,6 +11,7 @@ import { useTranslation } from "react-i18next";
 import NavigationCard from "@/components/common/NavigationCard";
 import { TiFlowMerge } from "react-icons/ti";
 import { FaRegCalendarAlt } from "react-icons/fa";
+import VersionBadge from "@/components/common/VersionBage";
 
 const IconColors = {
   design: "#6366F1",
@@ -70,18 +71,21 @@ export default function HomePage() {
           width: "100%",
         }}
       >
-        <motion.h1
-          initial={{ opacity: 0, y: -30 }}
-          animate={{ opacity: 1, y: 0 }}
-          transition={{ duration: 0.6 }}
-          style={{
-            fontSize: 32,
-            marginBottom: 2,
-            color: theme.palette.text.primary,
-          }}
-        >
-          Vietbando Workflow
-        </motion.h1>
+        <Box sx={{ display: "flex", alignItems: "center", gap: 1.5, mb: 1 }}>
+          <motion.h1
+            initial={{ opacity: 0, y: -30 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ duration: 0.6 }}
+            style={{
+              fontSize: 32,
+              margin: 0,
+              color: theme.palette.text.primary,
+            }}
+          >
+            Vietbando Workflow
+          </motion.h1>
+          <VersionBadge />
+        </Box>
 
         <motion.h2
           initial={{ opacity: 0, y: -10 }}
@@ -91,8 +95,8 @@ export default function HomePage() {
             fontSize: 16,
             fontWeight: 400,
             color: theme.palette.text.secondary,
-            marginBottom: 24,
             letterSpacing: 1,
+            marginBottom: 24,
           }}
         >
           {t(
@@ -160,10 +164,10 @@ export default function HomePage() {
             <Grid item xs={12} md={4} sx={{ display: "flex" }}>
               <NavigationCard
                 title={t("Schedules")}
-                description={t(
-                  "Schedule, track, and manage model timelines"
-                )}
-                icon={<FaRegCalendarAlt size={48} color={IconColors["schedules"]} />}
+                description={t("Schedule, track, and manage model timelines")}
+                icon={
+                  <FaRegCalendarAlt size={48} color={IconColors["schedules"]} />
+                }
                 to="/schedules"
               />
             </Grid>

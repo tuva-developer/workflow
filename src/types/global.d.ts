@@ -1,9 +1,7 @@
-type Permission = unknown;
-
 type RuntimeConfig = {
   API_BASE_URL: string;
   SECURE_FLAG: boolean;
-  MOCK_MODE: boolean;
+  VERSION: string;
 };
 
 type MultipartEntry = {
@@ -18,21 +16,28 @@ type BodyData = Record<string, unknown> | File | MultipartEntry[];
 
 type ReadOnlyFilter = "all" | "true" | "false";
 
-interface User {
+type UserRole =
+  | "User"
+  | "Executor"
+  | "Editor"
+  | "Invoker"
+  | "Admin"
+  | "SuperAdmin";
+
+type User = {
   userId: string;
-  roles: string[];
-  joined_at: string;
+  roles: UserRole[];
+  created_at: string;
   updated_at: string;
-  username?: string;
   email?: string;
   phone?: string;
   address?: string;
   fullname?: string;
-  permissions?: Permission[];
+  permissions?: string[];
   tenantId: string;
 }
 
-interface Group {
+type Group = {
   name: string;
   description: string;
   created_at: string;
@@ -41,7 +46,7 @@ interface Group {
   _id: string;
 }
 
-interface Model {
+type Model = {
   name: string;
   description: string;
   status: string;
@@ -56,26 +61,26 @@ interface Model {
   updated_at: string;
 }
 
-interface ModelSummary {
+type ModelSummary = {
   id: string;
   name: string;
 }
 
-interface Template {
+type Template = {
   name: string;
   config: string;
   description: string;
   _id: string;
 }
 
-interface FormConfig {
+type FormConfig = {
   name: string;
   config: string;
   description: string;
   _id: string;
 }
 
-interface InstanceData {
+type InstanceData = {
   duration: number;
   activity: unknown[];
   flow: unknown[];
@@ -84,7 +89,7 @@ interface InstanceData {
   executed: unknown[];
 }
 
-interface Instance {
+type Instance = {
   _id: string;
   _id_version: string;
   _id_model: string;
@@ -100,29 +105,32 @@ interface Instance {
   workflow: string;
 }
 
-interface Log {
+type Log = {
   activityId: string;
   date: string;
   level: string;
   log: string;
 }
 
-interface Task {
+type Assignee = { user: string } | { group: string }
+
+type Task = {
   activityId: string;
-  processId: string;
+  name: string;
   index: number;
-  assigneeType: string;
+  processId: string;
   status: string;
   form: string;
   formName: string;
-  assigneeId: string;
   instanceId: string;
+  modelId: string;
   taskId: string;
   created_at: string;
   updated_at: string;
+  assignee?: Assignee[]
 }
 
-interface ModelType {
+type ModelType = {
   name: string;
   description?: string;
   _id: string;
@@ -131,7 +139,7 @@ interface ModelType {
   creator?: string;
 }
 
-interface ModelCategory {
+type ModelCategory = {
   name: string;
   description: string;
   _id: string;
@@ -140,7 +148,7 @@ interface ModelCategory {
   creator?: string;
 }
 
-interface ItemExecute {
+type ItemExecute = {
   assigneeId: string;
   assigneeType: string;
   formName: string;
@@ -150,7 +158,7 @@ interface ItemExecute {
   taskId: string;
 }
 
-interface Confirm {
+type Confirm = {
   isOpen: boolean;
   onClose: () => void;
   onOk: () => void | Promise<void>;
@@ -163,17 +171,18 @@ type ConfirmOpen = Omit<Confirm, 'isOpen' | 'onClose'> & {
   onClose?: () => void;
 };
 
-interface Schedule {
+type Schedule = {
   _id: string;
   modelId: string;
   name: string;
+  type?: string;
   description: string;
   creator: string;
   cron: string;
   once: boolean;
   created_at: string;
   updated_at: string;
-  input: unknown;
+  input: Record<string, unknown>;
   active: boolean;
 }
 
@@ -181,7 +190,7 @@ interface Window {
   VBD_WORKFLOW_CONFIG?: {
     API_BASE_URL?: string;
     SECURE_FLAG?: boolean;
-    MOCK_MODE?: boolean;
+    VERSION?: string;
   };
   ace?: typeof ace;
 }
@@ -192,4 +201,4 @@ type CanvasWithAuto = Canvas & {
     center?: "auto" | { x: number; y: number }
   ): number | void;
   getRootElement(): BpmnElement | null;
-}
+};

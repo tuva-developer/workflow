@@ -11,7 +11,7 @@ import SearchTextField from "@/components/common/SearchTextField";
 import { useTranslation } from "react-i18next";
 import { useEffect, useMemo, useState } from "react";
 import ModelListDialog from "@/components/dialogs/ModelListDlg";
-import { defaultModel, formatDate } from "@/utils/defines";
+import { defaultModel } from "@/utils/defines";
 import SelectUser from "@/components/common/SelectUser";
 import CustomTablePagination from "@/components/common/CustomTablePagination";
 import CustomSelect from "@/components/common/CustomSelect";
@@ -19,21 +19,12 @@ import ActionButton from "@/components/common/ActionButton";
 import { FaInfo } from "react-icons/fa";
 import InstanceDetailDialog from "@/components/dialogs/InstanceDetailDlg";
 import ButtonRefresh from "@/components/common/ButtonRefresh";
-import {
-  GridColDef,
-  GridRenderCellParams,
-} from "@mui/x-data-grid";
+import { GridColDef, GridRenderCellParams } from "@mui/x-data-grid";
 import GenericDataGrid from "@/components/common/GenericDataGrid";
 import { useInstancesQuery } from "@/hooks/query/useInstancesQuery";
 import type { InstanceQuery } from "@/services/types";
-
-const StatusColors: Record<string, string> = {
-  completed: "#28a745",
-  failed: "#ef4444",
-  pending: "#FFB823",
-  running: "#007bff",
-  "not executed": "#FF7D29",
-};
+import { DateCell } from "@/components/common/DateCell";
+import { StatusColors } from "@/styles/styles";
 
 function InstanceTable() {
   const theme = useTheme();
@@ -58,6 +49,7 @@ function InstanceTable() {
     { value: "pending", label: t("Pending") },
     { value: "running", label: t("Running") },
     { value: "not executed", label: t("Not Executed") },
+    { value: "error", label: t("Error") },
   ];
 
   const params: InstanceQuery = useMemo(
@@ -165,17 +157,13 @@ function InstanceTable() {
       field: "created_at",
       headerName: t("Created at"),
       flex: 1,
-      renderCell: (p: GridRenderCellParams<Instance, string>) => (
-        <span>{formatDate(p.row.created_at)}</span>
-      ),
+      renderCell: (params) => <DateCell value={params.value} />,
     },
     {
       field: "updated_at",
       headerName: t("Updated at"),
       flex: 1,
-      renderCell: (p: GridRenderCellParams<Instance, string>) => (
-        <span>{formatDate(p.row.updated_at)}</span>
-      ),
+      renderCell: (params) => <DateCell value={params.value} />,
     },
     {
       field: "action",
