@@ -1,5 +1,6 @@
 import {
     InstanceQuery,
+    InvokeItemInput,
     PagedInstances,
 } from '@/services/types';
 import { asObject, asArray, asNumber, asBoolean } from '@/utils/typeGuards';
@@ -41,6 +42,6 @@ export async function deleteInstance(instanceId: string): Promise<void> {
     await mockBackend.deleteInstance(instanceId);
 }
 
-export async function invokeItem(instanceId: string, items: unknown): Promise<unknown> {
-    return mockBackend.invokeInstanceItem({ instanceId, items });
+export async function invokeItem(instanceId: string, items: ItemExecute[]): Promise<unknown> {
+    return mockBackend.invokeInstanceItem({ instanceId, items: items as unknown as InvokeItemInput['items'] });
 }

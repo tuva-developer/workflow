@@ -74,7 +74,7 @@ export async function updateMyProfile(input: UpdateUserInput): Promise<User> {
     fullname: input.fullname,
   };
 
-  return mockBackend.updateMyProfile(input);
+  return mockBackend.updateMyProfile({ userId: input.userId, ...payload });
 }
 
 export async function changePassword(input: ChangePassWordInput) {

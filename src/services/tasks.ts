@@ -33,26 +33,26 @@ export async function loadTask(taskId: string): Promise<Task> {
   return mockBackend.getTask(taskId);
 }
 
-export async function executeTask(taskId: string, data: object): Promise<Task> {
-  return mockBackend.executeTask(taskId);
+export async function executeTask(taskId: string, data: unknown): Promise<Task> {
+  return mockBackend.executeTask(taskId, data);
 }
 
 export async function executeTaskWithFile(taskId: string, file: File): Promise<Task> {
-  return mockBackend.executeTask(taskId);
+  return mockBackend.executeTask(taskId, file);
 }
 
 export async function executeTaskWithMultipart(taskId: string, formData: FormData): Promise<Task> {
-  return mockBackend.executeTask(taskId);
+  return mockBackend.executeTask(taskId, formData);
 }
 
 export async function debugTask(taskId: string, data: object): Promise<Task> {
-  return mockBackend.executeTask(taskId);
+  return mockBackend.executeTask(taskId, data);
 }
 
 export async function debugTaskWithFile(taskId: string, file: File): Promise<Task> {
-  return mockBackend.executeTask(taskId);
+  return mockBackend.executeTask(taskId, file);
 }
 
 export async function debugTaskWithMultipart(taskId: string, formData: FormData): Promise<Task> {
-  return mockBackend.executeTask(taskId);
+  return mockBackend.executeTask(taskId, formData);
 }

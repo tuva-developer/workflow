@@ -921,9 +921,9 @@ export const mockBackend = {
     const found = tasks.find((t) => t.taskId === taskId);
     return delay(found ?? tasks[0]);
   },
-  executeTask: async (taskId: string): Promise<Task> => {
+  executeTask: async (taskId: string, data: unknown): Promise<Task> => {
     tasks = tasks.map((t) =>
-      t.taskId === taskId ? { ...t, status: "completed", updated_at: nowIso() } : t
+      t.taskId === taskId ? { ...t, status: "completed", updated_at: nowIso(), input: data } : t
     );
     return delay(tasks.find((t) => t.taskId === taskId) ?? tasks[0]);
   },
