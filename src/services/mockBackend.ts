@@ -633,7 +633,7 @@ const sampleTasks: Task[] = [
     activityId: "form-upload",
     name: "Upload ID",
     processId: "process-onboard",
-    status: "waiting",
+    status: "pending",
     form: "form-identity",
     formName: "Identity Verification",
     instanceId: "ins-001",
